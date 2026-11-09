@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Карточки">
+<style>html{color-scheme:light dark}body{margin:0}</style>
+
+<title>Карточки слов</title>
+<meta name="theme-color" content="#eef0fb">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Layout: one-column phone app, sticky header, bottom tab bar, cards as soft pastel surfaces */
+:root{
+  --bg:#eef0fb; --surface:#ffffff; --surface2:#e4e7fa; --fg:#2b2d57; --muted:#767bab;
+  --accent:#7b82e6; --accent2:#a58bf5; --accent-ink:#ffffff; --line:#d9dcf3;
+  --bad:#e5484d; --bad-bg:#fde6e7; --ok:#25a06a; --ok-bg:#dff5ea; --stop:#ee8a1f; --stop-bg:#fdeed9;
+  --shadow:0 6px 22px rgba(95,100,190,.14);
+  --font-display:'Fredoka','Nunito',system-ui,sans-serif; --font-body:'Nunito',system-ui,sans-serif;
+  --grad:linear-gradient(135deg,#8fa0f5,#b49af7);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d0b14; --surface:#171321; --surface2:#221b33; --fg:#ece8fa; --muted:#9b90c2;
+  --accent:#a58bf5; --accent2:#7c6cf0; --accent-ink:#120d22; --line:#2c2342;
+  --bad:#ff6b70; --bad-bg:#3a1a24; --ok:#4ad694; --ok-bg:#12301f; --stop:#ffa24a; --stop-bg:#3a2810;
+  --shadow:0 6px 22px rgba(0,0,0,.45); --grad:linear-gradient(135deg,#7c6cf0,#a58bf5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d0b14; --surface:#171321; --surface2:#221b33; --fg:#ece8fa; --muted:#9b90c2;
+  --accent:#a58bf5; --accent2:#7c6cf0; --accent-ink:#120d22; --line:#2c2342;
+  --bad:#ff6b70; --bad-bg:#3a1a24; --ok:#4ad694; --ok-bg:#12301f; --stop:#ffa24a; --stop-bg:#3a2810;
+  --shadow:0 6px 22px rgba(0,0,0,.45); --grad:linear-gradient(135deg,#7c6cf0,#a58bf5); color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.4;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0;overflow-x:hidden}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:10px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:30}
+#app{max-width:560px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);display:flex;align-items:center;gap:10px;padding:14px 0 10px}
+header.top h1{font-family:var(--font-display);font-weight:600;font-size:24px;margin:0;flex:1;letter-spacing:.2px;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.icon-btn{width:42px;height:42px;border-radius:14px;background:var(--surface);box-shadow:var(--shadow);display:grid;place-items:center;font-size:20px;color:var(--accent)}
+main{flex:1;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;justify-content:center;
+  padding:8px max(12px,env(safe-area-inset-left,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-right,0px));
+  background:linear-gradient(to top,var(--bg) 70%,transparent)}
+nav.tabs .bar{display:flex;gap:4px;width:100%;max-width:560px;background:var(--surface);border-radius:22px;padding:6px;box-shadow:var(--shadow)}
+nav.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 2px;border-radius:16px;font-size:12px;font-weight:700;color:var(--muted)}
+nav.tabs button svg{width:22px;height:22px}
+nav.tabs button[aria-selected="true"]{background:var(--grad);color:var(--accent-ink)}
+h2{font-family:var(--font-display);font-weight:600;font-size:20px;margin:8px 0 12px}
+.sub{color:var(--muted);font-size:14px;margin:-6px 0 14px}
+.card{background:var(--surface);border-radius:20px;padding:14px 16px;box-shadow:var(--shadow)}
+.stack{display:flex;flex-direction:column;gap:10px}
+.row{display:flex;align-items:center;gap:10px}
+.row>.grow{flex:1;min-width:0}
+.wrap{flex-wrap:wrap}
+.btn{padding:12px 18px;border-radius:16px;font-weight:800;background:var(--grad);color:var(--accent-ink);box-shadow:var(--shadow)}
+.btn.soft{background:var(--surface2);color:var(--accent);box-shadow:none}
+.btn.danger{background:var(--bad-bg);color:var(--bad);box-shadow:none}
+.btn.block{width:100%}
+.btn:disabled{opacity:.45;cursor:default}
+.chip{padding:8px 14px;border-radius:999px;background:var(--surface);color:var(--muted);font-weight:700;font-size:14px;box-shadow:var(--shadow)}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+input[type=text],textarea,select{width:100%;padding:12px 14px;border-radius:14px;border:2px solid var(--line);background:var(--surface);outline:0}
+input[type=text]:focus,textarea:focus{border-color:var(--accent)}
+label.f{display:block;font-size:13px;font-weight:800;color:var(--muted);margin:0 0 6px}
+.item{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:18px;padding:12px 14px;box-shadow:var(--shadow)}
+.item .w{flex:1;min-width:0}
+.item .w b{display:block;overflow-wrap:anywhere}
+.item .w span{display:block;color:var(--muted);font-size:14px;overflow-wrap:anywhere}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:800}
+.pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.stop{background:var(--stop-bg);color:var(--stop)}
+.pill.neutral{background:var(--surface2);color:var(--muted)}
+.mark{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:18px;font-weight:800;flex:none}
+.mark.bad{background:var(--bad-bg);color:var(--bad)} .mark.ok{background:var(--ok-bg);color:var(--ok)} .mark.stop{background:var(--stop-bg);color:var(--stop)}
+.empty{text-align:center;color:var(--muted);padding:34px 12px}
+.check{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow);cursor:pointer}
+.check input{width:22px;height:22px;accent-color:var(--accent);flex:none}
+.sheet-bg{position:fixed;inset:0;background:rgba(20,16,40,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:88%;overflow:auto;border-radius:26px 26px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:700;z-index:60;font-size:14px}
+/* study */
+.progress{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--grad);transition:width .25s}
+.stage{position:relative;height:min(52vh,380px);margin:16px 0;perspective:1200px;touch-action:pan-y}
+.flip{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.3,.7,.3,1),box-shadow .2s;cursor:grab;user-select:none}
+.flip.is-flipped{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:28px;background:var(--surface);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;border:2px solid var(--line)}
+.face.back{transform:rotateY(180deg);background:var(--surface2)}
+.face .txt{font-family:var(--font-display);font-weight:500;font-size:clamp(26px,8vw,38px);overflow-wrap:anywhere;line-height:1.2}
+.face .hint{position:absolute;bottom:16px;font-size:13px;color:var(--muted);font-weight:700}
+.face .lang{position:absolute;top:16px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.drag-wrap{position:absolute;inset:0;transition:transform .25s}
+.badge-over{position:absolute;top:18px;z-index:3;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:28px;font-weight:800;opacity:0;pointer-events:none}
+.badge-over.l{left:18px;background:var(--bad-bg);color:var(--bad)} .badge-over.r{right:18px;background:var(--ok-bg);color:var(--ok)}
+.actions{display:flex;justify-content:center;gap:18px}
+.round{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;font-size:28px;font-weight:800;box-shadow:var(--shadow)}
+.round.bad{background:var(--bad-bg);color:var(--bad)} .round.ok{background:var(--ok-bg);color:var(--ok)} .round.stop{background:var(--stop-bg);color:var(--stop);width:52px;height:52px;align-self:center;font-size:22px}
+.q{background:var(--surface);border-radius:26px;padding:34px 20px;text-align:center;box-shadow:var(--shadow);margin:16px 0;border:2px solid var(--line)}
+.q .txt{font-family:var(--font-display);font-size:clamp(26px,8vw,36px);overflow-wrap:anywhere;line-height:1.2}
+.q .lang{display:block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.opt{width:100%;text-align:left;padding:14px 16px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow);font-weight:700;border:2px solid transparent;overflow-wrap:anywhere}
+.opt.right{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.opt.wrong{background:var(--bad-bg);color:var(--bad);border-color:var(--bad)}
+.feedback{padding:12px 14px;border-radius:16px;font-weight:700;overflow-wrap:anywhere}
+.feedback.ok{background:var(--ok-bg);color:var(--ok)} .feedback.bad{background:var(--bad-bg);color:var(--bad)}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-track{flex:1;height:12px;border-radius:99px;background:var(--surface2);overflow:hidden}
+.bar-track i{display:block;height:100%;border-radius:99px}
+.num{font-variant-numeric:tabular-nums}
+.kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.kpi .card{text-align:center;padding:12px 6px}
+.kpi b{display:block;font-family:var(--font-display);font-size:28px}
+.kpi span{font-size:12px;color:var(--muted);font-weight:700}
+.spark{display:flex;align-items:flex-end;gap:6px;height:90px}
+.spark div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;font-size:11px;color:var(--muted)}
+.spark i{width:100%;border-radius:8px 8px 4px 4px;background:var(--grad);min-height:3px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <h1 id="title">Карточки</h1>
+    <button class="icon-btn" id="btnTheme" aria-label="Сменить тему" title="Тема">◐</button>
+    <button class="icon-btn" id="btnMenu" aria-label="Данные и резервная копия" title="Резервная копия">⋯</button>
+  </header>
+  <main id="view"></main>
+  <nav class="tabs" aria-label="Разделы"><div class="bar" role="tablist" id="tabs"></div></nav>
+</div>
+<div id="layer"></div>
+<script>
+/* ---------- Хранилище: IndexedDB, без ограничений по количеству ---------- */
+const DB_NAME='flashcards-v1';
+let _db=null, memMode=false;
+const mem={cards:new Map(),cats:new Map(),events:new Map(),meta:new Map()};
+function openDB(){
+  return new Promise((res)=>{
+    try{
+      const r=indexedDB.open(DB_NAME,1);
+      r.onupgradeneeded=()=>{const d=r.result;
+        ['cards','cats','events'].forEach(n=>d.createObjectStore(n,{keyPath:'id'}));
+        d.createObjectStore('meta',{keyPath:'k'});};
+      r.onsuccess=()=>{_db=r.result;res(true)};
+      r.onerror=()=>{memMode=true;res(false)};
+      r.onblocked=()=>{memMode=true;res(false)};
+    }catch(e){memMode=true;res(false)}
+  });
+}
+function tx(store,mode,fn){return new Promise((res,rej)=>{
+  const t=_db.transaction(store,mode);const s=t.objectStore(store);const out=fn(s);
+  t.oncomplete=()=>res(out&&out.result!==undefined?out.result:undefined);t.onerror=()=>rej(t.error);});}
+const keyOf=(store)=>store==='meta'?'k':'id';
+async function dbAll(store){
+  if(memMode)return [...mem[store].values()];
+  return new Promise((res,rej)=>{const r=_db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+}
+async function dbPut(store,obj){
+  if(memMode){mem[store].set(obj[keyOf(store)],obj);return}
+  return tx(store,'readwrite',s=>s.put(obj));
+}
+async function dbPutMany(store,arr){
+  if(memMode){arr.forEach(o=>mem[store].set(o[keyOf(store)],o));return}
+  return tx(store,'readwrite',s=>{arr.forEach(o=>s.put(o))});
+}
+async function dbDel(store,id){
+  if(memMode){mem[store].delete(id);return}
+  return tx(store,'readwrite',s=>s.delete(id));
+}
+async function dbClear(store){
+  if(memMode){mem[store].clear();return}
+  return tx(store,'readwrite',s=>s.clear());
+}
+
+/* ---------- Состояние ---------- */
+const S={cards:[],cats:[],events:[],meta:{theme:'auto',frontLang:'Иностранный',seeded:false},
+  tab:'cards',cardFilter:'all',query:'',study:null};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+const $=(s,r=document)=>r.querySelector(s);
+const esc=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const byId=(arr,id)=>arr.find(x=>x.id===id);
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const dayKey=(t)=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
+const norm=(s)=>String(s).toLowerCase().replace(/ё/g,'е').replace(/[.,!?;:"«»()]/g,' ').replace(/\s+/g,' ').trim();
+
+/* статистика по карточке из журнала событий */
+function cardStats(){
+  const m=new Map();
+  for(const e of S.events){
+    let s=m.get(e.c);if(!s){s={ok:0,bad:0,last:null,lastT:0};m.set(e.c,s)}
+    s[e.r==='ok'?'ok':'bad']++; if(e.t>=s.lastT){s.last=e.r;s.lastT=e.t}
+  }
+  return m;
+}
+async function logEvent(cardId,result){
+  const ev={id:uid(),c:cardId,r:result,t:Date.now()};
+  S.events.push(ev);await dbPut('events',ev);
+}
+
+/* ---------- Тема ---------- */
+function applyTheme(){
+  const r=document.documentElement;
+  if(S.meta.theme==='light')r.setAttribute('data-theme','light');
+  else if(S.meta.theme==='dark')r.setAttribute('data-theme','dark');
+  else r.removeAttribute('data-theme');
+  const dark=S.meta.theme==='dark'||(S.meta.theme==='auto'&&matchMedia('(prefers-color-scheme:dark)').matches);
+  const m=document.querySelector('meta[name=theme-color]');if(m)m.content=dark?'#0d0b14':'#eef0fb';
+}
+async function cycleTheme(){
+  const order=['auto','light','dark'];
+  S.meta.theme=order[(order.indexOf(S.meta.theme)+1)%3];
+  applyTheme();await dbPut('meta',{k:'meta',...S.meta});
+  toast({auto:'Тема: как в системе',light:'Тема: светлая',dark:'Тема: тёмная'}[S.meta.theme]);
+}
+/* ---------- Окна ---------- */
+function openSheet(html,onMount){
+  closeSheet();
+  const bg=document.createElement('div');bg.className='sheet-bg';bg.id='sheetBg';
+  bg.innerHTML='<div class="sheet" role="dialog" aria-modal="true">'+html+'</div>';
+  bg.addEventListener('click',e=>{if(e.target===bg)closeSheet()});
+  $('#layer').appendChild(bg);onMount&&onMount(bg.firstChild);
+}
+function closeSheet(){const b=$('#sheetBg');if(b)b.remove()}
+
+/* ---------- Вкладка: карточки ---------- */
+function viewCards(){
+  const st=cardStats();
+  let list=S.cards.slice().sort((a,b)=>b.created-a.created);
+  if(S.cardFilter==='stop')list=list.filter(c=>c.stop);
+  const q=norm(S.query);
+  if(q)list=list.filter(c=>norm(c.front).includes(q)||norm(c.back).includes(q));
+  const stopCount=S.cards.filter(c=>c.stop).length;
+  const v=$('#view');
+  v.innerHTML=`
+    <div class="row" style="margin-bottom:10px"><input type="text" id="q" placeholder="Поиск по карточкам" value="${esc(S.query)}" aria-label="Поиск"><button class="btn" id="addCard" aria-label="Новая карточка">＋</button></div>
+    <div class="row wrap" style="margin-bottom:14px">
+      <button class="chip" data-f="all" aria-pressed="${S.cardFilter==='all'}">Все · <span class="num">${S.cards.length}</span></button>
+      <button class="chip" data-f="stop" aria-pressed="${S.cardFilter==='stop'}">○ Стоп-лист · <span class="num">${stopCount}</span></button>
+    </div>
+    <div class="stack" id="cardList">${list.length?list.map(c=>cardItem(c,st.get(c.id))).join(''):
+      `<div class="empty">${S.cardFilter==='stop'?'В стоп-листе пусто.<br>Сюда уходят слова, которые вы уже хорошо знаете.':'Карточек пока нет.<br>Нажмите ＋, чтобы создать первую.'}</div>`}</div>`;
+  $('#q').addEventListener('input',e=>{S.query=e.target.value;const pos=e.target.selectionStart;viewCards();const i=$('#q');i.focus();i.setSelectionRange(pos,pos)});
+  $('#addCard').onclick=()=>editCard();
+  v.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{S.cardFilter=b.dataset.f;viewCards()});
+  v.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editCard(b.dataset.edit));
+  v.querySelectorAll('[data-stop]').forEach(b=>b.onclick=()=>toggleStop(b.dataset.stop));
+}
+function cardItem(c,s){
+  let pill='';
+  if(c.stop)pill='<span class="pill stop">○ в стоп-листе</span>';
+  else if(s&&s.last==='bad')pill='<span class="pill bad">✗ недоучено</span>';
+  else if(s&&s.last==='ok')pill='<span class="pill ok">✓ выучено</span>';
+  const cats=S.cats.filter(k=>k.cardIds.includes(c.id)).length;
+  return `<div class="item"><button class="w" data-edit="${c.id}" style="text-align:left"><b>${esc(c.front)}</b><span>${esc(c.back)}</span>
+    <span style="margin-top:4px">${pill}${cats?` <span class="pill neutral">категорий: ${cats}</span>`:''}</span></button>
+    <button class="mark stop" data-stop="${c.id}" aria-label="${c.stop?'Достать из стоп-листа':'В стоп-лист'}" title="${c.stop?'Достать из стоп-листа':'В стоп-лист'}" style="${c.stop?'':'opacity:.45'}">○</button></div>`;
+}
+async function toggleStop(id){
+  const c=byId(S.cards,id);if(!c)return;c.stop=!c.stop;await dbPut('cards',c);
+  toast(c.stop?'Отправлено в стоп-лист':'Возвращено в обучение');
+  if(S.tab==='cards')viewCards();
+}
+function editCard(id){
+  const c=id?byId(S.cards,id):null;
+  const myCats=c?S.cats.filter(k=>k.cardIds.includes(c.id)).map(k=>k.id):[];
+  openSheet(`<h2>${c?'Редактировать карточку':'Новая карточка'}</h2>
+    <div class="stack">
+      <div><label class="f" for="fFront">${esc(S.meta.frontLang)} (лицевая сторона)</label><input type="text" id="fFront" value="${esc(c?.front||'')}" autocomplete="off" autocapitalize="none"></div>
+      <div><label class="f" for="fBack">Перевод на русском (оборотная сторона)</label><input type="text" id="fBack" value="${esc(c?.back||'')}" autocomplete="off">
+        <div class="sub" style="margin:6px 0 0">Несколько вариантов перевода можно писать через запятую. В письменном режиме подойдёт любой.</div></div>
+      ${S.cats.length?`<div><label class="f">Категории</label><div class="stack" id="fCats">${S.cats.map(k=>`<label class="check"><input type="checkbox" value="${k.id}" ${myCats.includes(k.id)?'checked':''}><span class="grow">${esc(k.name)}</span></label>`).join('')}</div></div>`:''}
+      <div class="row"><button class="btn block" id="fSave">Сохранить</button>${c?'<button class="btn danger" id="fDel">Удалить</button>':''}</div>
+      ${!c?'<button class="btn soft block" id="fSaveNext">Сохранить и добавить ещё</button>':''}
+    </div>`,(el)=>{
+    setTimeout(()=>$('#fFront').focus(),50);
+    const save=async(again)=>{
+      const front=$('#fFront').value.trim(),back=$('#fBack').value.trim();
+      if(!front||!back){toast('Заполните обе стороны');return}
+      let card=c;
+      if(!card){card={id:uid(),front,back,created:Date.now(),stop:false};S.cards.push(card)}
+      else{card.front=front;card.back=back}
+      await dbPut('cards',card);
+      const chosen=[...el.querySelectorAll('#fCats input:checked')].map(i=>i.value);
+      const touched=[];
+      for(const k of S.cats){
+        const has=k.cardIds.includes(card.id),want=chosen.includes(k.id);
+        if(want&&!has){k.cardIds.push(card.id);touched.push(k)}
+        if(!want&&has){k.cardIds=k.cardIds.filter(x=>x!==card.id);touched.push(k)}
+      }
+      if(touched.length)await dbPutMany('cats',touched);
+      toast('Сохранено');
+      if(again){editCard()}else closeSheet();
+      render();
+    };
+    $('#fSave').onclick=()=>save(false);
+    const n=$('#fSaveNext');if(n)n.onclick=()=>save(true);
+    el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save(false)}});
+    const d=$('#fDel');
+    if(d)d.onclick=()=>{
+      d.textContent='Точно удалить?';d.onclick=async()=>{
+        S.cards=S.cards.filter(x=>x.id!==c.id);await dbDel('cards',c.id);
+        const touched=S.cats.filter(k=>k.cardIds.includes(c.id));touched.forEach(k=>k.cardIds=k.cardIds.filter(x=>x!==c.id));
+        if(touched.length)await dbPutMany('cats',touched);
+        S.events=S.events.filter(e=>e.c!==c.id);
+        closeSheet();toast('Карточка удалена');render();
+      };
+    };
+  });
+}
+
+/* ---------- Вкладка: категории ---------- */
+function viewCats(){
+  const v=$('#view');
+  v.innerHTML=`<div class="row" style="margin-bottom:12px"><div class="grow sub" style="margin:0">Одна карточка может входить в несколько категорий.</div><button class="btn" id="addCat">＋ Категория</button></div>
+    <div class="stack">${S.cats.length?S.cats.map(k=>`<button class="item" data-cat="${k.id}" style="text-align:left;width:100%"><div class="w"><b>${esc(k.name)}</b><span class="num">карточек: ${k.cardIds.filter(id=>byId(S.cards,id)).length}</span></div><span style="color:var(--muted);font-size:22px">›</span></button>`).join(''):
+      '<div class="empty">Категорий пока нет.<br>Создайте тему, например «Еда» или «Путешествия», и добавьте в неё карточки из общего пула.</div>'}</div>`;
+  $('#addCat').onclick=()=>editCat();
+  v.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>editCat(b.dataset.cat));
+}
+function editCat(id){
+  const k=id?byId(S.cats,id):null;
+  const sel=new Set(k?k.cardIds:[]);
+  const sorted=S.cards.slice().sort((a,b)=>a.front.localeCompare(b.front));
+  openSheet(`<h2>${k?'Категория':'Новая категория'}</h2>
+    <div class="stack">
+      <div><label class="f" for="cName">Название</label><input type="text" id="cName" value="${esc(k?.name||'')}" autocomplete="off"></div>
+      <div><label class="f">Карточки из общего пула (<span id="cCount" class="num">${sel.size}</span>)</label>
+        <input type="text" id="cSearch" placeholder="Поиск" style="margin-bottom:8px">
+        <div class="stack" id="cPool" style="max-height:44vh;overflow:auto;padding:2px"></div></div>
+      <div class="row"><button class="btn block" id="cSave">Сохранить</button>${k?'<button class="btn danger" id="cDel">Удалить</button>':''}</div>
+    </div>`,(el)=>{
+    const pool=$('#cPool');
+    const draw=()=>{
+      const q=norm($('#cSearch').value);
+      const items=sorted.filter(c=>!q||norm(c.front).includes(q)||norm(c.back).includes(q));
+      pool.innerHTML=items.length?items.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${sel.has(c.id)?'checked':''}><span class="grow"><b>${esc(c.front)}</b> <span style="color:var(--muted)">· ${esc(c.back)}</span></span></label>`).join(''):'<div class="empty">Ничего нет. Сначала создайте карточки во вкладке «Карточки».</div>';
+    };
+    draw();
+    $('#cSearch').addEventListener('input',draw);
+    pool.addEventListener('change',e=>{if(e.target.type==='checkbox'){e.target.checked?sel.add(e.target.value):sel.delete(e.target.value);$('#cCount').textContent=sel.size}});
+    $('#cSave').onclick=async()=>{
+      const name=$('#cName').value.trim();if(!name){toast('Введите название');return}
+      let cat=k;if(!cat){cat={id:uid(),name,cardIds:[]};S.cats.push(cat)}
+      cat.name=name;cat.cardIds=[...sel];await dbPut('cats',cat);closeSheet();toast('Сохранено');render();
+    };
+    const d=$('#cDel');
+    if(d)d.onclick=()=>{d.textContent='Точно удалить?';d.onclick=async()=>{
+      S.cats=S.cats.filter(x=>x.id!==k.id);await dbDel('cats',k.id);closeSheet();toast('Категория удалена (карточки остались в пуле)');render()}};
+  });
+}
+
+/* ---------- Резервная копия и настройки ---------- */
+function openMenu(){
+  openSheet(`<h2>Данные</h2><div class="stack">
+    <div><label class="f" for="mLang">Название языка на лицевой стороне</label><input type="text" id="mLang" value="${esc(S.meta.frontLang)}"></div>
+    <div class="sub" style="margin:0">Данные хранятся в этом браузере без ограничений по числу карточек. Чтобы не потерять их при очистке браузера или перенести на другое устройство, сохраните резервную копию.</div>
+    <button class="btn block" id="mExport">Показать копию для сохранения</button>
+    <textarea id="mText" rows="6" placeholder="Сюда можно вставить копию, чтобы восстановить данные" style="display:none"></textarea>
+    <button class="btn soft block" id="mImport">Восстановить из копии</button>
+    <button class="btn soft block" id="mFile">Загрузить копию из файла</button><input type="file" id="mFileIn" accept=".json,application/json" hidden>
+    <button class="btn block" id="mSaveLang">Готово</button></div>`,()=>{
+    $('#mSaveLang').onclick=async()=>{S.meta.frontLang=$('#mLang').value.trim()||'Иностранный';await dbPut('meta',{k:'meta',...S.meta});closeSheet();render()};
+    $('#mExport').onclick=()=>{
+      const t=$('#mText');t.style.display='block';
+      t.value=JSON.stringify({v:1,cards:S.cards,cats:S.cats,events:S.events,meta:S.meta});t.select();
+      try{navigator.clipboard.writeText(t.value).then(()=>toast('Скопировано'),()=>toast('Выделено. Скопируйте вручную'))}catch(e){toast('Выделено. Скопируйте вручную')}
+    };
+    const doImport=async(text)=>{
+      try{const d=JSON.parse(text);if(!Array.isArray(d.cards))throw 0;
+        await dbClear('cards');await dbClear('cats');await dbClear('events');
+        await dbPutMany('cards',d.cards);await dbPutMany('cats',d.cats||[]);await dbPutMany('events',d.events||[]);
+        S.cards=d.cards;S.cats=d.cats||[];S.events=d.events||[];
+        if(d.meta){S.meta={...S.meta,...d.meta};await dbPut('meta',{k:'meta',...S.meta})}
+        applyTheme();closeSheet();toast('Данные восстановлены');render();
+      }catch(e){toast('Не удалось прочитать копию')}
+    };
+    $('#mImport').onclick=()=>{const t=$('#mText');if(t.style.display==='none'){t.style.display='block';t.focus();toast('Вставьте копию и нажмите ещё раз');return}doImport(t.value)};
+    $('#mFile').onclick=()=>$('#mFileIn').click();
+    $('#mFileIn').onchange=(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>doImport(r.result);r.readAsText(f)};
+  });
+}
+/* ---------- Вкладка: учить ---------- */
+const MODES={classic:'Классика',choice:'Варианты',write:'Письмо'};
+S.setup={sel:new Set(['__all']),side:'front',shuffle:true,stopOnly:false};
+S.mode='classic';
+
+function enterStudy(reset){if(reset||!S.study)S.study={phase:'setup'};render()}
+function viewStudy(){
+  const v=$('#view');
+  const tabs=`<div class="row wrap" style="margin-bottom:14px">${Object.entries(MODES).map(([k,n])=>`<button class="chip" data-mode="${k}" aria-pressed="${S.mode===k}">${n}</button>`).join('')}</div>`;
+  if(S.study.phase==='setup'){v.innerHTML=tabs+setupHtml();bindSetup(v)}
+  else if(S.study.phase==='done'){v.innerHTML=doneHtml();bindDone(v)}
+  else{v.innerHTML=runShell();bindRun(v)}
+  v.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;S.study={phase:'setup'};viewStudy()});
+}
+const normalCards=()=>S.cards.filter(c=>!c.stop);
+function setupHtml(){
+  const T=S.setup, stopN=S.cards.filter(c=>c.stop).length;
+  const hint={classic:'Смахивайте карточку: вправо, если выучили, влево, если ещё нет. Касание переворачивает карточку.',
+    choice:'К слову нужно выбрать верный перевод из вариантов.',write:'К слову нужно ввести ответ самостоятельно.'}[S.mode];
+  const catRow=(id,name,n)=>`<label class="check"><input type="checkbox" data-sel="${id}" ${T.sel.has(id)&&!T.stopOnly?'checked':''} ${T.stopOnly?'disabled':''}><span class="grow">${esc(name)}</span><span class="pill neutral num">${n}</span></label>`;
+  return `<h2>Что повторяем?</h2><div class="sub">${hint}</div>
+    <div class="stack">
+      ${catRow('__all','Все карточки',normalCards().length)}
+      ${S.cats.map(k=>catRow(k.id,k.name,k.cardIds.map(id=>byId(S.cards,id)).filter(c=>c&&!c.stop).length)).join('')}
+      <label class="check" style="background:var(--stop-bg)"><input type="checkbox" id="stopOnly" ${T.stopOnly?'checked':''}><span class="grow" style="color:var(--stop);font-weight:800">○ Только стоп-лист</span><span class="pill stop num">${stopN}</span></label>
+    </div>
+    <h2 style="margin-top:20px">Показывать сторону</h2>
+    <div class="row wrap"><button class="chip" data-side="front" aria-pressed="${T.side==='front'}">${esc(S.meta.frontLang)} → русский</button>
+      <button class="chip" data-side="back" aria-pressed="${T.side==='back'}">Русский → ${esc(S.meta.frontLang)}</button></div>
+    <label class="check" style="margin-top:14px"><input type="checkbox" id="shuf" ${T.shuffle?'checked':''}><span class="grow">Перемешать карточки</span></label>
+    <div id="setupMsg" class="sub" style="margin:12px 0 0"></div>
+    <button class="btn block" id="go" style="margin-top:10px">Начать</button>`;
+}
+function bindSetup(v){
+  const T=S.setup;
+  v.querySelectorAll('[data-sel]').forEach(i=>i.onchange=()=>{i.checked?T.sel.add(i.dataset.sel):T.sel.delete(i.dataset.sel)});
+  v.querySelector('#stopOnly').onchange=(e)=>{T.stopOnly=e.target.checked;viewStudy()};
+  v.querySelectorAll('[data-side]').forEach(b=>b.onclick=()=>{T.side=b.dataset.side;viewStudy()});
+  v.querySelector('#shuf').onchange=(e)=>T.shuffle=e.target.checked;
+  v.querySelector('#go').onclick=startSession;
+}
+function buildQueue(){
+  const T=S.setup;let cards;
+  if(T.stopOnly)cards=S.cards.filter(c=>c.stop);
+  else if(T.sel.has('__all'))cards=normalCards();
+  else{const ids=new Set();S.cats.filter(k=>T.sel.has(k.id)).forEach(k=>k.cardIds.forEach(i=>ids.add(i)));cards=S.cards.filter(c=>ids.has(c.id)&&!c.stop)}
+  const seen=new Set();cards=cards.filter(c=>!seen.has(c.id)&&seen.add(c.id));
+  return T.shuffle?shuffle(cards):cards;
+}
+function startSession(){
+  const q=buildQueue();
+  if(!q.length){$('#setupMsg').textContent='В выбранных категориях нет карточек для повторения. Отметьте другие или добавьте карточки.';return}
+  if(S.mode==='choice'&&uniqueAnswers(S.cards).length<2){$('#setupMsg').textContent='Для режима с вариантами нужно хотя бы две разные карточки в пуле.';return}
+  S.study={phase:'run',queue:q,i:0,ok:[],bad:[],stopped:[],answered:false};
+  viewStudy();
+}
+const shownOf=(c)=>S.setup.side==='front'?c.front:c.back;
+const answerOf=(c)=>S.setup.side==='front'?c.back:c.front;
+const langShown=()=>S.setup.side==='front'?S.meta.frontLang:'Русский';
+const langAnswer=()=>S.setup.side==='front'?'Русский':S.meta.frontLang;
+const uniqueAnswers=(cards)=>{const seen=new Set();return cards.filter(c=>{const k=norm(answerOf(c));if(seen.has(k))return false;seen.add(k);return true})};
+
+function runShell(){
+  const s=S.study,c=s.queue[s.i];
+  const head=`<div class="row" style="margin-bottom:6px"><button class="chip" id="quit">✕ Выйти</button><div class="grow"></div><span class="num" style="font-weight:800;color:var(--muted)">${s.i+1} / ${s.queue.length}</span></div>
+    <div class="progress"><i style="width:${(s.i/s.queue.length)*100}%"></i></div>`;
+  const stopLabel=c.stop?'Достать из стоп-листа':'В стоп-лист';
+  if(S.mode==='classic')return head+`
+    <div class="stage" id="stage"><div class="drag-wrap" id="dw"><div class="badge-over l" id="bl">✗</div><div class="badge-over r" id="br">✓</div>
+      <div class="flip" id="flip"><div class="face front"><span class="lang">${esc(langShown())}</span><div class="txt">${esc(shownOf(c))}</div><span class="hint">коснитесь, чтобы перевернуть</span></div>
+      <div class="face back"><span class="lang">${esc(langAnswer())}</span><div class="txt">${esc(answerOf(c))}</div><span class="hint">← ещё нет · выучено →</span></div></div></div></div>
+    <div class="actions"><button class="round bad" id="bBad" aria-label="Ещё не выучено">✗</button><button class="round stop" id="bStop" aria-label="${stopLabel}" title="${stopLabel}">○</button><button class="round ok" id="bOk" aria-label="Выучено">✓</button></div>`;
+  const stopBtn=`<div class="row" style="justify-content:center;margin-top:14px"><button class="chip" id="bStop" style="color:var(--stop)">○ ${stopLabel}</button></div>`;
+  if(S.mode==='choice'){
+    if(!s.options){
+      const pool=uniqueAnswers(S.cards.filter(x=>x.id!==c.id&&norm(answerOf(x))!==norm(answerOf(c))));
+      s.options=shuffle([c,...shuffle(pool).slice(0,3)]);
+    }
+    return head+`<div class="q"><span class="lang">${esc(langShown())}</span><div class="txt">${esc(shownOf(c))}</div></div>
+      <div class="stack" id="opts">${s.options.map((o,n)=>`<button class="opt" data-o="${n}">${esc(answerOf(o))}</button>`).join('')}</div>
+      <div id="fb" style="margin-top:12px"></div>${stopBtn}`;
+  }
+  return head+`<div class="q"><span class="lang">${esc(langShown())}</span><div class="txt">${esc(shownOf(c))}</div></div>
+    <div class="stack"><input type="text" id="ans" placeholder="Ваш ответ (${esc(langAnswer())})" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+    <div id="fb"></div><button class="btn block" id="check">Проверить</button></div>${stopBtn}`;
+}
+function bindRun(v){
+  const s=S.study,c=s.queue[s.i];
+  $('#quit').onclick=()=>{S.study={phase:'setup'};viewStudy()};
+  $('#bStop').onclick=async()=>{await toggleStop(c.id);if(c.stop)s.stopped.push(c.id);next(true)};
+  if(S.mode==='classic')bindClassic(c);
+  else if(S.mode==='choice')bindChoice(c);
+  else bindWrite(c);
+}
+async function mark(c,res){
+  await logEvent(c.id,res);(res==='ok'?S.study.ok:S.study.bad).push(c.id);
+}
+function next(skipLog){
+  const s=S.study;s.i++;s.options=null;s.answered=false;
+  if(s.i>=s.queue.length)s.phase='done';
+  viewStudy();
+}
+/* классика */
+function bindClassic(c){
+  const stage=$('#stage'),dw=$('#dw'),flip=$('#flip'),bl=$('#bl'),br=$('#br');
+  let x0=null,dx=0,done=false;
+  const commit=async(dir)=>{
+    if(done)return;done=true;
+    dw.style.transition='transform .28s,opacity .28s';dw.style.transform=`translateX(${dir*140}%) rotate(${dir*18}deg)`;dw.style.opacity='0';
+    await mark(c,dir>0?'ok':'bad');setTimeout(()=>next(),230);
+  };
+  stage.addEventListener('pointerdown',e=>{x0=e.clientX;dx=0;dw.style.transition='none';stage.setPointerCapture(e.pointerId)});
+  stage.addEventListener('pointermove',e=>{if(x0===null)return;dx=e.clientX-x0;
+    dw.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;
+    const k=Math.min(1,Math.abs(dx)/100);br.style.opacity=dx>0?k:0;bl.style.opacity=dx<0?k:0});
+  const end=()=>{if(x0===null)return;const d=dx;x0=null;
+    if(Math.abs(d)>90)commit(d>0?1:-1);
+    else{dw.style.transition='transform .25s';dw.style.transform='';br.style.opacity=0;bl.style.opacity=0;
+      if(Math.abs(d)<6)flip.classList.toggle('is-flipped')}};
+  stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',()=>{x0=null;dw.style.transform='';br.style.opacity=0;bl.style.opacity=0});
+  $('#bOk').onclick=()=>commit(1);$('#bBad').onclick=()=>commit(-1);
+}
+/* варианты */
+function bindChoice(c){
+  const s=S.study;
+  $('#opts').addEventListener('click',async(e)=>{
+    const b=e.target.closest('.opt');if(!b||s.answered)return;s.answered=true;
+    const picked=s.options[+b.dataset.o],good=picked.id===c.id||norm(answerOf(picked))===norm(answerOf(c));
+    $('#opts').querySelectorAll('.opt').forEach((el,n)=>{const o=s.options[n];
+      if(o.id===c.id||norm(answerOf(o))===norm(answerOf(c)))el.classList.add('right');else if(el===b)el.classList.add('wrong')});
+    await mark(c,good?'ok':'bad');
+    $('#fb').innerHTML=`<div class="feedback ${good?'ok':'bad'}">${good?'✓ Верно':'✗ Неверно. Правильно: '+esc(answerOf(c))}</div><button class="btn block" id="nx" style="margin-top:10px">Дальше</button>`;
+    $('#nx').onclick=()=>next();$('#nx').focus();
+  });
+}
+/* письмо */
+function variants(t){return String(t).split(/[,;\/]/).map(norm).filter(Boolean)}
+function bindWrite(c){
+  const s=S.study,inp=$('#ans');setTimeout(()=>inp.focus(),50);
+  const go=async()=>{
+    if(s.answered){next();return}
+    const val=norm(inp.value);if(!val){toast('Введите ответ');return}
+    s.answered=true;inp.disabled=true;
+    const good=val===norm(answerOf(c))||variants(answerOf(c)).includes(val);
+    await mark(c,good?'ok':'bad');
+    $('#fb').innerHTML=`<div class="feedback ${good?'ok':'bad'}">${good?'✓ Верно':'✗ Неверно. Правильно: '+esc(answerOf(c))}</div>`;
+    const b=$('#check');b.textContent='Дальше';b.focus();
+  };
+  $('#check').onclick=go;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go()}});
+  document.addEventListener('keydown',function h(e){if(!$('#check')){document.removeEventListener('keydown',h);return}
+    if(e.key==='Enter'&&s.answered&&document.activeElement!==$('#check')){e.preventDefault();go()}});
+}
+/* итог */
+function doneHtml(){
+  const s=S.study;
+  return `<h2>Готово</h2><div class="kpi" style="margin-bottom:16px">
+    <div class="card"><b class="num" style="color:var(--ok)">✓ ${s.ok.length}</b><span>выучено</span></div>
+    <div class="card"><b class="num" style="color:var(--bad)">✗ ${s.bad.length}</b><span>недоучено</span></div>
+    <div class="card"><b class="num" style="color:var(--stop)">○ ${s.stopped.length}</b><span>в стоп-лист</span></div></div>
+    <div class="stack">${s.bad.length?'<button class="btn block" id="again">Повторить недоученные</button>':''}<button class="btn soft block" id="back">К выбору категорий</button></div>`;
+}
+function bindDone(v){
+  const s=S.study;
+  const a=v.querySelector('#again');
+  if(a)a.onclick=()=>{const ids=[...new Set(s.bad)];const q=ids.map(id=>byId(S.cards,id)).filter(c=>c&&(S.setup.stopOnly||!c.stop));
+    S.study={phase:'run',queue:S.setup.shuffle?shuffle(q):q,i:0,ok:[],bad:[],stopped:[],answered:false};viewStudy()};
+  v.querySelector('#back').onclick=()=>{S.study={phase:'setup'};viewStudy()};
+}
+/* ---------- Вкладка: статистика ---------- */
+function viewStats(){
+  const v=$('#view'),st=cardStats(),today=dayKey(Date.now());
+  const learnedByDay=new Map(),answersByDay=new Map();
+  for(const e of S.events){const d=dayKey(e.t);answersByDay.set(d,(answersByDay.get(d)||0)+1);
+    if(e.r==='ok'){if(!learnedByDay.has(d))learnedByDay.set(d,new Set());learnedByDay.get(d).add(e.c)}}
+  const days=[];for(let i=6;i>=0;i--){const t=Date.now()-i*864e5;const k=dayKey(t);
+    days.push({k,label:new Date(t).toLocaleDateString('ru-RU',{weekday:'short'}),n:(learnedByDay.get(k)||new Set()).size})}
+  const max=Math.max(1,...days.map(d=>d.n));
+  const rows=[...st.entries()].map(([id,s])=>({c:byId(S.cards,id),...s})).filter(r=>r.c);
+  const forgot=rows.filter(r=>r.bad>0).sort((a,b)=>b.bad-a.bad||(b.bad/(b.bad+b.ok))-(a.bad/(a.bad+a.ok))).slice(0,10);
+  const perfect=rows.filter(r=>r.ok>0&&r.bad===0).sort((a,b)=>b.ok-a.ok).slice(0,10);
+  const maxBad=Math.max(1,...forgot.map(r=>r.bad)),maxOk=Math.max(1,...perfect.map(r=>r.ok));
+  const line=(r,val,max,color,mark)=>`<div class="item"><div class="w"><b>${esc(r.c.front)}</b><span>${esc(r.c.back)}</span>
+    <div class="bar-row" style="margin-top:6px"><div class="bar-track"><i style="width:${Math.max(6,val/max*100)}%;background:${color}"></i></div><span class="num" style="font-weight:800;color:${color}">${mark} ${val}</span></div></div></div>`;
+  v.innerHTML=`<div class="kpi">
+      <div class="card"><b class="num" style="color:var(--ok)">${(learnedByDay.get(today)||new Set()).size}</b><span>выучено сегодня</span></div>
+      <div class="card"><b class="num">${answersByDay.get(today)||0}</b><span>ответов сегодня</span></div>
+      <div class="card"><b class="num" style="color:var(--stop)">${S.cards.filter(c=>c.stop).length}</b><span>в стоп-листе</span></div></div>
+    <h2 style="margin-top:20px">Выучено за 7 дней</h2>
+    <div class="card"><div class="spark">${days.map(d=>`<div><span class="num" style="font-weight:800;color:var(--fg)">${d.n}</span><i style="height:${Math.max(3,d.n/max*58)}px"></i><span>${esc(d.label)}</span></div>`).join('')}</div></div>
+    <h2 style="margin-top:20px">Чаще всего забываются</h2><div class="sub">Карточки с наибольшим числом неверных ответов.</div>
+    <div class="stack">${forgot.length?forgot.map(r=>line(r,r.bad,maxBad,'var(--bad)','✗')).join(''):'<div class="empty">Пока ни одной ошибки.</div>'}</div>
+    <h2 style="margin-top:20px">Всегда выучены</h2><div class="sub">Правильные ответы подряд, без единой ошибки.</div>
+    <div class="stack">${perfect.length?perfect.map(r=>line(r,r.ok,maxOk,'var(--ok)','✓')).join(''):'<div class="empty">Появятся после первых повторений.</div>'}</div>`;
+}
+
+/* ---------- Каркас ---------- */
+const TABS=[
+ ['cards','Карточки','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="14" height="14" rx="3"/><path d="M7 3h11a3 3 0 0 1 3 3v11"/></svg>'],
+ ['cats','Категории','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'],
+ ['study','Учить','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>'],
+ ['stats','Статистика','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>']];
+const TITLES={cards:'Карточки',cats:'Категории',study:'Учить',stats:'Статистика'};
+function renderTabs(){
+  $('#tabs').innerHTML=TABS.map(([id,n,ic])=>`<button role="tab" data-t="${id}" aria-selected="${S.tab===id}">${ic}<span>${n}</span></button>`).join('');
+  $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    const same=S.tab===b.dataset.t;S.tab=b.dataset.t;
+    if(S.tab==='study')enterStudy(true);else render();
+    if(!same)scrollTo(0,0);
+  });
+}
+function render(){
+  $('#title').textContent=TITLES[S.tab];renderTabs();
+  if(S.tab==='cards')viewCards();
+  else if(S.tab==='cats')viewCats();
+  else if(S.tab==='study'){if(!S.study)S.study={phase:'setup'};viewStudy()}
+  else viewStats();
+}
+
+/* ---------- Запуск ---------- */
+const SAMPLE=[['apple','яблоко'],['bread','хлеб'],['cheese','сыр'],['milk','молоко'],['ticket','билет'],['luggage','багаж'],['airport','аэропорт'],['hotel','гостиница']];
+async function init(){
+  $('#btnTheme').onclick=cycleTheme;$('#btnMenu').onclick=openMenu;
+  await openDB();
+  try{
+    S.cards=await dbAll('cards');S.cats=await dbAll('cats');S.events=await dbAll('events');
+    const m=(await dbAll('meta')).find(x=>x.k==='meta');if(m){const{k,...rest}=m;S.meta={...S.meta,...rest}}
+    if(!S.meta.seeded&&!S.cards.length){
+      /* примеры при первом запуске; их можно удалить */
+      const t=Date.now();
+      S.cards=SAMPLE.map(([f,b],i)=>({id:uid(),front:f,back:b,created:t-i,stop:false}));
+      S.cats=[{id:uid(),name:'Еда (пример)',cardIds:S.cards.slice(0,4).map(c=>c.id)},{id:uid(),name:'Путешествия (пример)',cardIds:S.cards.slice(4).map(c=>c.id)}];
+      await dbPutMany('cards',S.cards);await dbPutMany('cats',S.cats);
+    }
+    S.meta.seeded=true;await dbPut('meta',{k:'meta',...S.meta});
+  }catch(e){console.warn(e)}
+  applyTheme();render();
+  if(memMode)setTimeout(()=>toast('Хранилище недоступно: данные сохранятся только до закрытия страницы'),600);
+}
+init();
+</script>
+<script>
+if('serviceWorker' in navigator && location.protocol.startsWith('http')){
+  addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+
+</body>
+</html>
