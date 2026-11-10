@@ -10,7 +10,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Карточки">
 <style>html{color-scheme:light dark}body{margin:0}</style>
-
 <title>Карточки слов</title>
 <meta name="theme-color" content="#eef0fb">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Nunito:wght@400;600;700;800&display=swap">
@@ -85,7 +84,38 @@ label.f{display:block;font-size:13px;font-weight:800;color:var(--muted);margin:0
 .check{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:16px;background:var(--surface);box-shadow:var(--shadow);cursor:pointer}
 .check input{width:22px;height:22px;accent-color:var(--accent);flex:none}
 .sheet-bg{position:fixed;inset:0;background:rgba(20,16,40,.45);z-index:40;display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--bg);width:100%;max-width:560px;max-height:88%;overflow:auto;border-radius:26px 26px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet{background:var(--bg);width:100%;max-width:560px;max-height:92%;display:flex;flex-direction:column;overflow:hidden;border-radius:26px 26px 0 0}
+.sheet-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:18px 16px 12px}
+.sheet-body:last-child{padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet-foot{display:flex;flex-direction:column;gap:8px;padding:10px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg)}
+.clr{position:relative}
+.clr input{padding-right:42px}
+.clr .x{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:var(--surface2);color:var(--muted);display:none;place-items:center;font-size:13px;font-weight:800}
+.clr.has .x{display:grid}
+.warn{margin-top:6px;padding:8px 12px;border-radius:12px;background:var(--bad-bg);color:var(--bad);font-weight:700;font-size:14px;overflow-wrap:anywhere}
+input.is-dup{border-color:var(--bad)!important}
+.check.compact{padding:8px 12px;gap:10px;border-radius:14px;box-shadow:none;background:var(--surface)}
+.catbox{max-height:272px;overflow:auto;padding:2px;display:flex;flex-direction:column;gap:6px;border-radius:16px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px;min-width:0}
+.two>div{min-width:0}
+.plist{display:flex;flex-direction:column;gap:6px;max-height:46vh;overflow:auto;padding:2px}
+.pi{display:flex;align-items:center;gap:6px;width:100%;text-align:left;padding:8px 10px;border-radius:12px;background:var(--surface);font-size:14px;line-height:1.25}
+.pi .t{flex:1;min-width:0;overflow-wrap:anywhere}
+.pi .t b{display:block}.pi .t span{color:var(--muted);display:block}
+.pi .m{flex:none;font-weight:800;color:var(--muted)}
+.pi.in{background:var(--ok-bg)} .pi.in .m{color:var(--ok)}
+.cap{font-size:13px;font-weight:800;color:var(--muted);margin:0 0 6px}
+.brow{background:var(--surface);border-radius:16px;padding:10px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow)}
+.brow .in{display:grid;grid-template-columns:1fr auto 1fr auto;gap:6px;align-items:center}
+.brow .in input{padding:10px 10px;min-width:0}
+.brow .dash{color:var(--muted);font-weight:800}
+.brow .del{width:30px;height:30px;border-radius:50%;background:var(--surface2);color:var(--muted);font-size:13px;font-weight:800}
+.brow .catbtn{text-align:left;font-size:13px;font-weight:700;color:var(--accent);padding:2px 2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips .chip{padding:6px 11px;font-size:13px;box-shadow:none;background:var(--surface2)}
+.chips .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.cnt{width:84px!important;text-align:center}
+
 .toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:700;z-index:60;font-size:14px}
 /* study */
 .progress{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}
@@ -126,7 +156,6 @@ label.f{display:block;font-size:13px;font-weight:800;color:var(--muted);margin:0
 .spark i{width:100%;border-radius:8px 8px 4px 4px;background:var(--grad);min-height:3px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
-
 </head>
 <body>
 <div id="app">
@@ -184,7 +213,7 @@ async function dbClear(store){
 
 /* ---------- Состояние ---------- */
 const S={cards:[],cats:[],events:[],meta:{theme:'auto',frontLang:'Иностранный',seeded:false},
-  tab:'cards',cardFilter:'all',query:'',study:null};
+  tab:'cards',cardFilter:'all',query:'',study:null,drafts:{},cycle:{classic:[],choice:[],write:[]}};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const $=(s,r=document)=>r.querySelector(s);
 const esc=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -192,7 +221,36 @@ const byId=(arr,id)=>arr.find(x=>x.id===id);
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 const dayKey=(t)=>{const d=new Date(t);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 function toast(msg){const t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),1800)}
-const norm=(s)=>String(s).toLowerCase().replace(/ё/g,'е').replace(/[.,!?;:"«»()]/g,' ').replace(/\s+/g,' ').trim();
+const norm=(s)=>String(s).normalize('NFKC').toLowerCase().replace(/ё/g,'е').replace(/[.,!?;:"«»()。、，！？「」『』（）・]/g,' ').replace(/\s+/g,' ').trim();
+/* несколько вариантов в одной строке: запятая, точка с запятой, косая черта, японская запятая */
+const splitVariants=(t)=>String(t).split(/[,;\/、，；／]/).map(x=>x.trim()).filter(Boolean);
+const variantKeys=(t)=>splitVariants(t).map(norm).filter(Boolean);
+/* карточка с таким же иностранным словом (любой из вариантов) */
+function findDup(front,excludeId,extra){
+  const keys=new Set(variantKeys(front));if(!keys.size)return null;
+  for(const c of S.cards){if(c.id===excludeId)continue;if(variantKeys(c.front).some(k=>keys.has(k)))return c}
+  if(extra)for(const c of extra){if(variantKeys(c.front).some(k=>keys.has(k)))return c}
+  return null;
+}
+/* кнопка ✕ в поле ввода */
+function clearable(inp){
+  const w=document.createElement('div');w.className='clr';inp.parentNode.insertBefore(w,inp);w.appendChild(inp);
+  const b=document.createElement('button');b.type='button';b.className='x';b.textContent='✕';b.setAttribute('aria-label','Очистить поле');w.appendChild(b);
+  const upd=()=>w.classList.toggle('has',!!inp.value);
+  inp.addEventListener('input',upd);
+  b.addEventListener('click',()=>{inp.value='';upd();inp.dispatchEvent(new Event('input',{bubbles:true}));inp.focus()});
+  upd();return w;
+}
+/* Enter во время ввода через IME (японский) только подтверждает слово */
+const isIME=(e)=>e.isComposing||e.keyCode===229;
+/* черновики незаконченных карточек, переживают закрытие окна и перезагрузку */
+let _dt=null;
+function saveDraft(key,val){
+  S.drafts[key]=val;clearTimeout(_dt);
+  _dt=setTimeout(()=>{dbPut('meta',{k:'drafts',...S.drafts}).catch(()=>{})},250);
+}
+function clearDraft(key){delete S.drafts[key];dbPut('meta',{k:'drafts',...S.drafts}).catch(()=>{})}
+
 
 /* статистика по карточке из журнала событий */
 function cardStats(){
@@ -224,35 +282,53 @@ async function cycleTheme(){
   toast({auto:'Тема: как в системе',light:'Тема: светлая',dark:'Тема: тёмная'}[S.meta.theme]);
 }
 /* ---------- Окна ---------- */
-function openSheet(html,onMount){
+function openSheet(html,onMount,foot){
   closeSheet();
   const bg=document.createElement('div');bg.className='sheet-bg';bg.id='sheetBg';
-  bg.innerHTML='<div class="sheet" role="dialog" aria-modal="true">'+html+'</div>';
-  bg.addEventListener('click',e=>{if(e.target===bg)closeSheet()});
+  bg.innerHTML='<div class="sheet" role="dialog" aria-modal="true"><div class="sheet-body">'+html+'</div>'+(foot?'<div class="sheet-foot">'+foot+'</div>':'')+'</div>';
+  /* окно закрывается только если и нажатие, и отпускание были на затемнении:
+     выделение текста мышью с выходом за край окна его больше не закрывает */
+  let down=false;
+  bg.addEventListener('pointerdown',e=>{down=(e.target===bg)});
+  bg.addEventListener('click',e=>{if(e.target===bg&&down)closeSheet();down=false});
   $('#layer').appendChild(bg);onMount&&onMount(bg.firstChild);
 }
 function closeSheet(){const b=$('#sheetBg');if(b)b.remove()}
 
 /* ---------- Вкладка: карточки ---------- */
 function viewCards(){
+  const v=$('#view');
+  v.innerHTML=`
+    <div style="margin-bottom:10px"><input type="text" id="q" placeholder="Поиск по карточкам" value="${esc(S.query)}" aria-label="Поиск" autocomplete="off"></div>
+    <div class="row" style="margin-bottom:10px"><button class="btn grow" id="addCard">＋ Карточка</button><button class="btn soft grow" id="addMany">＋ Несколько слов</button></div>
+    <div class="row wrap" id="chipsRow" style="margin-bottom:14px"></div>
+    <div class="stack" id="cardList"></div>`;
+  clearable($('#q'));
+  /* поле поиска не перерисовывается при вводе, иначе ломается ввод через IME (японский) */
+  $('#q').addEventListener('input',e=>{S.query=e.target.value;drawCardList()});
+  $('#addCard').onclick=()=>editCard();
+  $('#addMany').onclick=()=>editMany();
+  drawCardList();
+}
+function drawCardList(){
   const st=cardStats();
+  const inCat=new Set();S.cats.forEach(k=>k.cardIds.forEach(i=>inCat.add(i)));
+  const nocat=S.cards.filter(c=>!inCat.has(c.id));
   let list=S.cards.slice().sort((a,b)=>b.created-a.created);
   if(S.cardFilter==='stop')list=list.filter(c=>c.stop);
+  else if(S.cardFilter==='nocat')list=list.filter(c=>!inCat.has(c.id));
   const q=norm(S.query);
   if(q)list=list.filter(c=>norm(c.front).includes(q)||norm(c.back).includes(q));
   const stopCount=S.cards.filter(c=>c.stop).length;
+  $('#chipsRow').innerHTML=`
+    <button class="chip" data-f="all" aria-pressed="${S.cardFilter==='all'}">Все · <span class="num">${S.cards.length}</span></button>
+    <button class="chip" data-f="nocat" aria-pressed="${S.cardFilter==='nocat'}">Без категории · <span class="num">${nocat.length}</span></button>
+    <button class="chip" data-f="stop" aria-pressed="${S.cardFilter==='stop'}">○ Стоп-лист · <span class="num">${stopCount}</span></button>`;
+  const empty={stop:'В стоп-листе пусто.<br>Сюда уходят слова, которые вы уже хорошо знаете.',nocat:'Все карточки распределены по категориям.',
+    all:q?'Ничего не найдено.':'Карточек пока нет.<br>Нажмите «＋ Карточка», чтобы создать первую.'}[S.cardFilter];
+  $('#cardList').innerHTML=list.length?list.map(c=>cardItem(c,st.get(c.id))).join(''):`<div class="empty">${q&&S.cardFilter!=='all'?'Ничего не найдено.':empty}</div>`;
   const v=$('#view');
-  v.innerHTML=`
-    <div class="row" style="margin-bottom:10px"><input type="text" id="q" placeholder="Поиск по карточкам" value="${esc(S.query)}" aria-label="Поиск"><button class="btn" id="addCard" aria-label="Новая карточка">＋</button></div>
-    <div class="row wrap" style="margin-bottom:14px">
-      <button class="chip" data-f="all" aria-pressed="${S.cardFilter==='all'}">Все · <span class="num">${S.cards.length}</span></button>
-      <button class="chip" data-f="stop" aria-pressed="${S.cardFilter==='stop'}">○ Стоп-лист · <span class="num">${stopCount}</span></button>
-    </div>
-    <div class="stack" id="cardList">${list.length?list.map(c=>cardItem(c,st.get(c.id))).join(''):
-      `<div class="empty">${S.cardFilter==='stop'?'В стоп-листе пусто.<br>Сюда уходят слова, которые вы уже хорошо знаете.':'Карточек пока нет.<br>Нажмите ＋, чтобы создать первую.'}</div>`}</div>`;
-  $('#q').addEventListener('input',e=>{S.query=e.target.value;const pos=e.target.selectionStart;viewCards();const i=$('#q');i.focus();i.setSelectionRange(pos,pos)});
-  $('#addCard').onclick=()=>editCard();
-  v.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{S.cardFilter=b.dataset.f;viewCards()});
+  v.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{S.cardFilter=b.dataset.f;drawCardList()});
   v.querySelectorAll('[data-edit]').forEach(b=>b.onclick=()=>editCard(b.dataset.edit));
   v.querySelectorAll('[data-stop]').forEach(b=>b.onclick=()=>toggleStop(b.dataset.stop));
 }
@@ -263,49 +339,67 @@ function cardItem(c,s){
   else if(s&&s.last==='ok')pill='<span class="pill ok">✓ выучено</span>';
   const cats=S.cats.filter(k=>k.cardIds.includes(c.id)).length;
   return `<div class="item"><button class="w" data-edit="${c.id}" style="text-align:left"><b>${esc(c.front)}</b><span>${esc(c.back)}</span>
-    <span style="margin-top:4px">${pill}${cats?` <span class="pill neutral">категорий: ${cats}</span>`:''}</span></button>
+    <span style="margin-top:4px">${pill}${cats?` <span class="pill neutral">категорий: ${cats}</span>`:' <span class="pill neutral">без категории</span>'}</span></button>
     <button class="mark stop" data-stop="${c.id}" aria-label="${c.stop?'Достать из стоп-листа':'В стоп-лист'}" title="${c.stop?'Достать из стоп-листа':'В стоп-лист'}" style="${c.stop?'':'opacity:.45'}">○</button></div>`;
 }
 async function toggleStop(id){
   const c=byId(S.cards,id);if(!c)return;c.stop=!c.stop;await dbPut('cards',c);
   toast(c.stop?'Отправлено в стоп-лист':'Возвращено в обучение');
-  if(S.tab==='cards')viewCards();
+  if(S.tab==='cards')drawCardList();
 }
+
+/* ---------- Окно одной карточки ---------- */
 function editCard(id){
   const c=id?byId(S.cards,id):null;
-  const myCats=c?S.cats.filter(k=>k.cardIds.includes(c.id)).map(k=>k.id):[];
+  const dr=!c?(S.drafts.card||{}):{};
+  const myCats=c?S.cats.filter(k=>k.cardIds.includes(c.id)).map(k=>k.id):(dr.cats||[]).filter(i=>byId(S.cats,i));
+  const catsHtml=S.cats.length?`<div><label class="f">Категории (<span id="fCatN" class="num">${myCats.length}</span>)</label>
+    <div class="catbox" id="fCats">${S.cats.map(k=>`<label class="check compact"><input type="checkbox" value="${k.id}" ${myCats.includes(k.id)?'checked':''}><span class="grow">${esc(k.name)}</span></label>`).join('')}</div></div>`:'';
   openSheet(`<h2>${c?'Редактировать карточку':'Новая карточка'}</h2>
     <div class="stack">
-      <div><label class="f" for="fFront">${esc(S.meta.frontLang)} (лицевая сторона)</label><input type="text" id="fFront" value="${esc(c?.front||'')}" autocomplete="off" autocapitalize="none"></div>
-      <div><label class="f" for="fBack">Перевод на русском (оборотная сторона)</label><input type="text" id="fBack" value="${esc(c?.back||'')}" autocomplete="off">
-        <div class="sub" style="margin:6px 0 0">Несколько вариантов перевода можно писать через запятую. В письменном режиме подойдёт любой.</div></div>
-      ${S.cats.length?`<div><label class="f">Категории</label><div class="stack" id="fCats">${S.cats.map(k=>`<label class="check"><input type="checkbox" value="${k.id}" ${myCats.includes(k.id)?'checked':''}><span class="grow">${esc(k.name)}</span></label>`).join('')}</div></div>`:''}
-      <div class="row"><button class="btn block" id="fSave">Сохранить</button>${c?'<button class="btn danger" id="fDel">Удалить</button>':''}</div>
-      ${!c?'<button class="btn soft block" id="fSaveNext">Сохранить и добавить ещё</button>':''}
+      <div><label class="f" for="fFront">${esc(S.meta.frontLang)} (лицевая сторона)</label>
+        <input type="text" id="fFront" value="${esc(c?c.front:(dr.front||''))}" autocomplete="off" autocapitalize="none">
+        <div id="dupWarn"></div>
+        <div class="sub" style="margin:6px 0 0">Несколько слов для одного перевода пишите через запятую. В письменном режиме подойдёт любое.</div></div>
+      <div><label class="f" for="fBack">Перевод на русском (оборотная сторона)</label>
+        <input type="text" id="fBack" value="${esc(c?c.back:(dr.back||''))}" autocomplete="off">
+        <div class="sub" style="margin:6px 0 0">Несколько вариантов перевода тоже через запятую.</div></div>
+      ${catsHtml}
     </div>`,(el)=>{
-    setTimeout(()=>$('#fFront').focus(),50);
+    const F=$('#fFront'),B=$('#fBack');clearable(F);clearable(B);
+    setTimeout(()=>F.focus(),50);
+    const chosen=()=>[...el.querySelectorAll('#fCats input:checked')].map(i=>i.value);
+    const checkDup=()=>{const d=findDup(F.value,c?.id);F.classList.toggle('is-dup',!!d);
+      $('#dupWarn').innerHTML=d?`<div class="warn">⚠ Такая карточка уже есть: <b>${esc(d.front)}</b> — ${esc(d.back)}</div>`:''};
+    const keep=()=>{if(c)return;const n=$('#fCatN');if(n)n.textContent=chosen().length;
+      if(!F.value&&!B.value&&!chosen().length)clearDraft('card');else saveDraft('card',{front:F.value,back:B.value,cats:chosen()})};
+    F.addEventListener('input',()=>{checkDup();keep()});B.addEventListener('input',keep);
+    el.addEventListener('change',e=>{if(e.target.closest('#fCats'))keep()});
+    checkDup();
     const save=async(again)=>{
-      const front=$('#fFront').value.trim(),back=$('#fBack').value.trim();
+      const front=F.value.trim(),back=B.value.trim();
       if(!front||!back){toast('Заполните обе стороны');return}
       let card=c;
       if(!card){card={id:uid(),front,back,created:Date.now(),stop:false};S.cards.push(card)}
       else{card.front=front;card.back=back}
       await dbPut('cards',card);
-      const chosen=[...el.querySelectorAll('#fCats input:checked')].map(i=>i.value);
-      const touched=[];
+      const sel=chosen(),touched=[];
       for(const k of S.cats){
-        const has=k.cardIds.includes(card.id),want=chosen.includes(k.id);
+        const has=k.cardIds.includes(card.id),want=sel.includes(k.id);
         if(want&&!has){k.cardIds.push(card.id);touched.push(k)}
         if(!want&&has){k.cardIds=k.cardIds.filter(x=>x!==card.id);touched.push(k)}
       }
       if(touched.length)await dbPutMany('cats',touched);
       toast('Сохранено');
-      if(again){editCard()}else closeSheet();
-      render();
+      if(!c&&again){saveDraft('card',{front:'',back:'',cats:sel});render();editCard()}
+      else{if(!c)clearDraft('card');closeSheet();render()}
     };
     $('#fSave').onclick=()=>save(false);
     const n=$('#fSaveNext');if(n)n.onclick=()=>save(true);
-    el.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();save(false)}});
+    /* Enter: в первом поле переходит ко второму, во втором сохраняет.
+       Во время ввода через IME Enter только подтверждает слово. */
+    F.addEventListener('keydown',e=>{if(e.key==='Enter'&&!isIME(e)){e.preventDefault();B.focus()}});
+    B.addEventListener('keydown',e=>{if(e.key==='Enter'&&!isIME(e)){e.preventDefault();save(!c)}});
     const d=$('#fDel');
     if(d)d.onclick=()=>{
       d.textContent='Точно удалить?';d.onclick=async()=>{
@@ -316,7 +410,96 @@ function editCard(id){
         closeSheet();toast('Карточка удалена');render();
       };
     };
-  });
+  },c?`<div class="row"><button class="btn grow" id="fSave">Сохранить</button><button class="btn danger" id="fDel">Удалить</button></div>`
+    :`<button class="btn block" id="fSave">Сохранить</button><button class="btn soft block" id="fSaveNext">Сохранить и продолжить</button>`);
+}
+
+/* ---------- Несколько слов сразу ---------- */
+function editMany(){
+  const dr=S.drafts.bulk||{};
+  let def=(dr.def||[]).filter(i=>byId(S.cats,i));
+  const R=(dr.rows&&dr.rows.length?dr.rows:Array.from({length:5},()=>({}))).map(r=>({f:r.f||'',b:r.b||'',cats:r.cats?r.cats.filter(i=>byId(S.cats,i)):null}));
+  const existing=new Map();S.cards.forEach(c=>variantKeys(c.front).forEach(k=>existing.set(k,c)));
+  const names=(ids)=>ids.map(i=>byId(S.cats,i)?.name).filter(Boolean);
+  openSheet(`<h2>Несколько слов сразу</h2>
+    <div class="sub">Слово — перевод = категории. Несколько вариантов пишите через запятую. Enter в поле перевода переходит к следующей строке.</div>
+    <div class="stack">
+      <div><label class="f">Категории для всех строк</label>
+        ${S.cats.length?'<div class="chips" id="defChips" style="max-height:132px;overflow:auto"></div>':'<div class="sub" style="margin:0">Категорий пока нет. Создать их можно во вкладке «Категории».</div>'}</div>
+      <div class="stack" id="rows"></div>
+      <div class="row"><button class="btn soft grow" id="addRow">＋ Строка</button><button class="btn soft grow" id="addRows">＋ 5 строк</button></div>
+    </div>`,(el)=>{
+    const rowsBox=$('#rows');
+    const persist=()=>{const any=R.some(r=>r.f||r.b||r.cats);
+      if(!any&&!def.length)clearDraft('bulk');else saveDraft('bulk',{rows:R.map(r=>({f:r.f,b:r.b,cats:r.cats})),def})};
+    const filledCount=()=>R.filter(r=>r.f.trim()&&r.b.trim()).length;
+    const upBtn=()=>{const n=filledCount();const b=$('#bSave');b.textContent=n?`Сохранить всё (${n})`:'Сохранить всё';};
+    const dupOf=(r)=>{const keys=variantKeys(r.f);if(!keys.length)return null;
+      for(const k of keys)if(existing.has(k))return {card:existing.get(k)};
+      const idx=R.indexOf(r);
+      for(let j=0;j<idx;j++){if(variantKeys(R[j].f).some(k=>keys.includes(k)))return {batch:true}}
+      return null};
+    const recheck=()=>rowsBox.querySelectorAll('.brow').forEach(el=>{
+      const r=el._r,d=dupOf(r),w=el.querySelector('.rwarn');
+      el.querySelector('.rf').classList.toggle('is-dup',!!d);
+      w.innerHTML=d?`<div class="warn" style="margin:0">⚠ ${d.card?`Уже есть: <b>${esc(d.card.front)}</b> — ${esc(d.card.back)}. Эта строка будет пропущена.`:'Повтор в этом списке. Эта строка будет пропущена.'}</div>`:''});
+    const label=(r)=>{const ids=r.cats||def;const n=names(ids).join(', ')||'без категории';return r.cats?('= '+n):('= как у всех: '+n)};
+    const chipsFor=(r)=>`<button type="button" class="chip" data-same aria-pressed="${r.cats===null}">как у всех</button>`+
+      S.cats.map(k=>`<button type="button" class="chip" data-c="${k.id}" aria-pressed="${(r.cats||[]).includes(k.id)}">${esc(k.name)}</button>`).join('');
+    const addRow=(r,focus)=>{
+      const el=document.createElement('div');el.className='brow';el._r=r;
+      el.innerHTML=`<div class="in"><input type="text" class="rf" placeholder="${esc(S.meta.frontLang)}" value="${esc(r.f)}" autocomplete="off" autocapitalize="none"><span class="dash">—</span>
+        <input type="text" class="rb" placeholder="Перевод" value="${esc(r.b)}" autocomplete="off"><button type="button" class="del" aria-label="Убрать строку">✕</button></div>
+        <div class="rwarn"></div>${S.cats.length?'<button type="button" class="catbtn"></button><div class="chips" hidden></div>':''}`;
+      const rf=el.querySelector('.rf'),rb=el.querySelector('.rb'),cb=el.querySelector('.catbtn'),ch=el.querySelector('.chips');
+      const setLbl=()=>{if(cb)cb.textContent=label(r)};setLbl();el._setLbl=setLbl;
+      rf.addEventListener('input',()=>{r.f=rf.value;recheck();upBtn();persist()});
+      rb.addEventListener('input',()=>{r.b=rb.value;upBtn();persist()});
+      rf.addEventListener('keydown',e=>{if(e.key==='Enter'&&!isIME(e)){e.preventDefault();rb.focus()}});
+      rb.addEventListener('keydown',e=>{if(e.key==='Enter'&&!isIME(e)){e.preventDefault();
+        let nx=el.nextElementSibling;if(!nx){addRow({f:'',b:'',cats:null},true);nx=el.nextElementSibling}
+        nx.querySelector('.rf').focus()}});
+      el.querySelector('.del').onclick=()=>{R.splice(R.indexOf(r),1);el.remove();if(!R.length)addRow({f:'',b:'',cats:null});recheck();upBtn();persist()};
+      if(cb){cb.onclick=()=>{ch.hidden=!ch.hidden;if(!ch.hidden)ch.innerHTML=chipsFor(r)};
+        ch.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
+          if(b.hasAttribute('data-same'))r.cats=null;
+          else{if(r.cats===null)r.cats=[...def];const id=b.dataset.c;r.cats=r.cats.includes(id)?r.cats.filter(x=>x!==id):[...r.cats,id]}
+          ch.innerHTML=chipsFor(r);setLbl();persist()})}
+      rowsBox.appendChild(el);
+      if(!R.includes(r))R.push(r);
+      if(focus)rf.focus();
+    };
+    R.forEach(r=>addRow(r));recheck();upBtn();
+    const defBox=$('#defChips');
+    const drawDef=()=>{if(!defBox)return;defBox.innerHTML=S.cats.map(k=>`<button type="button" class="chip" data-c="${k.id}" aria-pressed="${def.includes(k.id)}">${esc(k.name)}</button>`).join('')};
+    drawDef();
+    if(defBox)defBox.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.c;
+      def=def.includes(id)?def.filter(x=>x!==id):[...def,id];drawDef();
+      rowsBox.querySelectorAll('.brow').forEach(r=>{r._setLbl&&r._setLbl();const ch=r.querySelector('.chips');if(ch&&!ch.hidden)ch.innerHTML=chipsFor(r._r)});persist()});
+    $('#addRow').onclick=()=>addRow({f:'',b:'',cats:null},true);
+    $('#addRows').onclick=()=>{for(let i=0;i<5;i++)addRow({f:'',b:'',cats:null},i===0)};
+    $('#bSave').onclick=async()=>{
+      const filled=R.filter(r=>r.f.trim()||r.b.trim());
+      const partial=filled.find(r=>!r.f.trim()||!r.b.trim());
+      if(partial){const el=[...rowsBox.children].find(x=>x._r===partial);el&&el.scrollIntoView({block:'center'});toast('В одной из строк заполнена только одна сторона');return}
+      if(!filled.length){toast('Впишите хотя бы одно слово');return}
+      const seen=new Map(existing),created=[],byCat=new Map();let skipped=0;const t=Date.now();
+      for(const r of filled){
+        const keys=variantKeys(r.f);
+        if(keys.some(k=>seen.has(k))){skipped++;continue}
+        const card={id:uid(),front:r.f.trim(),back:r.b.trim(),created:t+created.length,stop:false};
+        keys.forEach(k=>seen.set(k,card));created.push(card);
+        for(const cid of (r.cats||def)){if(!byCat.has(cid))byCat.set(cid,[]);byCat.get(cid).push(card.id)}
+      }
+      if(!created.length){toast('Все слова из списка уже есть в пуле');return}
+      S.cards.push(...created);await dbPutMany('cards',created);
+      const touched=[];for(const [cid,ids] of byCat){const k=byId(S.cats,cid);if(k){k.cardIds.push(...ids);touched.push(k)}}
+      if(touched.length)await dbPutMany('cats',touched);
+      clearDraft('bulk');closeSheet();
+      toast(`Добавлено: ${created.length}`+(skipped?`, пропущено повторов: ${skipped}`:''));render();
+    };
+    setTimeout(()=>rowsBox.querySelector('.rf')?.focus(),50);
+  },`<button class="btn block" id="bSave">Сохранить всё</button>`);
 }
 
 /* ---------- Вкладка: категории ---------- */
@@ -330,25 +513,30 @@ function viewCats(){
 }
 function editCat(id){
   const k=id?byId(S.cats,id):null;
-  const sel=new Set(k?k.cardIds:[]);
+  const sel=new Set(k?k.cardIds.filter(i=>byId(S.cards,i)):[]);
   const sorted=S.cards.slice().sort((a,b)=>a.front.localeCompare(b.front));
+  const item=(c,mark,cls)=>`<button type="button" class="pi ${cls||''}" data-id="${c.id}"><span class="t"><b>${esc(c.front)}</b><span>${esc(c.back)}</span></span><span class="m">${mark}</span></button>`;
   openSheet(`<h2>${k?'Категория':'Новая категория'}</h2>
-    <div class="stack">
-      <div><label class="f" for="cName">Название</label><input type="text" id="cName" value="${esc(k?.name||'')}" autocomplete="off"></div>
-      <div><label class="f">Карточки из общего пула (<span id="cCount" class="num">${sel.size}</span>)</label>
-        <input type="text" id="cSearch" placeholder="Поиск" style="margin-bottom:8px">
-        <div class="stack" id="cPool" style="max-height:44vh;overflow:auto;padding:2px"></div></div>
-      <div class="row"><button class="btn block" id="cSave">Сохранить</button>${k?'<button class="btn danger" id="cDel">Удалить</button>':''}</div>
+    <div><label class="f" for="cName">Название</label><input type="text" id="cName" value="${esc(k?.name||'')}" autocomplete="off"></div>
+    <div class="two" style="margin-top:14px">
+      <div><div class="cap">В категории: <span id="cN" class="num"></span></div><div class="plist" id="cLeft"></div></div>
+      <div><div class="cap">Все слова: <span class="num">${S.cards.length}</span></div><input type="text" id="cSearch" placeholder="Поиск" autocomplete="off" style="margin-bottom:8px;padding:9px 12px"><div class="plist" id="cPool"></div></div>
     </div>`,(el)=>{
-    const pool=$('#cPool');
-    const draw=()=>{
-      const q=norm($('#cSearch').value);
+    clearable($('#cName'));clearable($('#cSearch'));
+    const left=$('#cLeft'),pool=$('#cPool');
+    const drawLeft=()=>{const st=left.scrollTop;const items=sorted.filter(c=>sel.has(c.id));
+      left.innerHTML=items.length?items.map(c=>item(c,'✕')).join(''):'<div class="sub" style="margin:4px 2px">Пока пусто. Выберите слова справа.</div>';
+      left.scrollTop=st;$('#cN').textContent=sel.size};
+    const drawPool=()=>{const q=norm($('#cSearch').value);
       const items=sorted.filter(c=>!q||norm(c.front).includes(q)||norm(c.back).includes(q));
-      pool.innerHTML=items.length?items.map(c=>`<label class="check"><input type="checkbox" value="${c.id}" ${sel.has(c.id)?'checked':''}><span class="grow"><b>${esc(c.front)}</b> <span style="color:var(--muted)">· ${esc(c.back)}</span></span></label>`).join(''):'<div class="empty">Ничего нет. Сначала создайте карточки во вкладке «Карточки».</div>';
-    };
-    draw();
-    $('#cSearch').addEventListener('input',draw);
-    pool.addEventListener('change',e=>{if(e.target.type==='checkbox'){e.target.checked?sel.add(e.target.value):sel.delete(e.target.value);$('#cCount').textContent=sel.size}});
+      pool.innerHTML=items.length?items.map(c=>item(c,sel.has(c.id)?'✓':'＋',sel.has(c.id)?'in':'')).join(''):'<div class="sub" style="margin:4px 2px">Ничего нет. Сначала создайте карточки.</div>'};
+    drawLeft();drawPool();
+    $('#cSearch').addEventListener('input',drawPool);
+    pool.addEventListener('click',e=>{const b=e.target.closest('.pi');if(!b)return;const id=b.dataset.id;
+      sel.has(id)?sel.delete(id):sel.add(id);
+      b.classList.toggle('in',sel.has(id));b.querySelector('.m').textContent=sel.has(id)?'✓':'＋';drawLeft()});
+    left.addEventListener('click',e=>{const b=e.target.closest('.pi');if(!b)return;const id=b.dataset.id;sel.delete(id);drawLeft();
+      const pb=pool.querySelector(`[data-id="${id}"]`);if(pb){pb.classList.remove('in');pb.querySelector('.m').textContent='＋'}});
     $('#cSave').onclick=async()=>{
       const name=$('#cName').value.trim();if(!name){toast('Введите название');return}
       let cat=k;if(!cat){cat={id:uid(),name,cardIds:[]};S.cats.push(cat)}
@@ -357,7 +545,7 @@ function editCat(id){
     const d=$('#cDel');
     if(d)d.onclick=()=>{d.textContent='Точно удалить?';d.onclick=async()=>{
       S.cats=S.cats.filter(x=>x.id!==k.id);await dbDel('cats',k.id);closeSheet();toast('Категория удалена (карточки остались в пуле)');render()}};
-  });
+  },`<div class="row"><button class="btn grow" id="cSave">Сохранить</button>${k?'<button class="btn danger" id="cDel">Удалить</button>':''}</div>`);
 }
 
 /* ---------- Резервная копия и настройки ---------- */
@@ -373,7 +561,7 @@ function openMenu(){
     $('#mSaveLang').onclick=async()=>{S.meta.frontLang=$('#mLang').value.trim()||'Иностранный';await dbPut('meta',{k:'meta',...S.meta});closeSheet();render()};
     $('#mExport').onclick=()=>{
       const t=$('#mText');t.style.display='block';
-      t.value=JSON.stringify({v:1,cards:S.cards,cats:S.cats,events:S.events,meta:S.meta});t.select();
+      t.value=JSON.stringify({v:1,cards:S.cards,cats:S.cats,events:S.events,meta:S.meta,cycle:S.cycle});t.select();
       try{navigator.clipboard.writeText(t.value).then(()=>toast('Скопировано'),()=>toast('Выделено. Скопируйте вручную'))}catch(e){toast('Выделено. Скопируйте вручную')}
     };
     const doImport=async(text)=>{
@@ -381,6 +569,7 @@ function openMenu(){
         await dbClear('cards');await dbClear('cats');await dbClear('events');
         await dbPutMany('cards',d.cards);await dbPutMany('cats',d.cats||[]);await dbPutMany('events',d.events||[]);
         S.cards=d.cards;S.cats=d.cats||[];S.events=d.events||[];
+        if(d.cycle){S.cycle={classic:[],choice:[],write:[],...d.cycle};await dbPut('meta',{k:'cycle',...S.cycle})}
         if(d.meta){S.meta={...S.meta,...d.meta};await dbPut('meta',{k:'meta',...S.meta})}
         applyTheme();closeSheet();toast('Данные восстановлены');render();
       }catch(e){toast('Не удалось прочитать копию')}
@@ -392,7 +581,7 @@ function openMenu(){
 }
 /* ---------- Вкладка: учить ---------- */
 const MODES={classic:'Классика',choice:'Варианты',write:'Письмо'};
-S.setup={sel:new Set(['__all']),side:'front',shuffle:true,stopOnly:false};
+S.setup={sel:new Set(['__all']),side:'front',shuffle:true,stopOnly:false,count:20};
 S.mode='classic';
 
 function enterStudy(reset){if(reset||!S.study)S.study={phase:'setup'};render()}
@@ -416,6 +605,10 @@ function setupHtml(){
       ${S.cats.map(k=>catRow(k.id,k.name,k.cardIds.map(id=>byId(S.cards,id)).filter(c=>c&&!c.stop).length)).join('')}
       <label class="check" style="background:var(--stop-bg)"><input type="checkbox" id="stopOnly" ${T.stopOnly?'checked':''}><span class="grow" style="color:var(--stop);font-weight:800">○ Только стоп-лист</span><span class="pill stop num">${stopN}</span></label>
     </div>
+    <h2 style="margin-top:20px">Сколько слов за раз</h2>
+    <div class="row wrap">${[10,20,50,0].map(n=>`<button class="chip" data-cnt="${n}" aria-pressed="${T.count===n}">${n||'Все'}</button>`).join('')}
+      <input type="text" inputmode="numeric" id="cnt" class="cnt" value="${[10,20,50,0].includes(T.count)?'':T.count}" placeholder="своё" aria-label="Своё количество слов" autocomplete="off"></div>
+    <div class="sub" id="cycleInfo" style="margin:10px 0 0"></div>
     <h2 style="margin-top:20px">Показывать сторону</h2>
     <div class="row wrap"><button class="chip" data-side="front" aria-pressed="${T.side==='front'}">${esc(S.meta.frontLang)} → русский</button>
       <button class="chip" data-side="back" aria-pressed="${T.side==='back'}">Русский → ${esc(S.meta.frontLang)}</button></div>
@@ -425,25 +618,62 @@ function setupHtml(){
 }
 function bindSetup(v){
   const T=S.setup;
-  v.querySelectorAll('[data-sel]').forEach(i=>i.onchange=()=>{i.checked?T.sel.add(i.dataset.sel):T.sel.delete(i.dataset.sel)});
+  v.querySelectorAll('[data-sel]').forEach(i=>i.onchange=()=>{i.checked?T.sel.add(i.dataset.sel):T.sel.delete(i.dataset.sel);updCycle()});
+  const setCount=(n)=>{T.count=n;S.meta.count=n;dbPut('meta',{k:'meta',...S.meta}).catch(()=>{})};
+  v.querySelectorAll('[data-cnt]').forEach(b=>b.onclick=()=>{setCount(+b.dataset.cnt);viewStudy()});
+  v.querySelector('#cnt').addEventListener('input',e=>{const n=parseInt(e.target.value,10);
+    if(n>0){setCount(n);v.querySelectorAll('[data-cnt]').forEach(b=>b.setAttribute('aria-pressed','false'));updCycle()}});
+  updCycle();
   v.querySelector('#stopOnly').onchange=(e)=>{T.stopOnly=e.target.checked;viewStudy()};
   v.querySelectorAll('[data-side]').forEach(b=>b.onclick=()=>{T.side=b.dataset.side;viewStudy()});
   v.querySelector('#shuf').onchange=(e)=>T.shuffle=e.target.checked;
   v.querySelector('#go').onclick=startSession;
 }
-function buildQueue(){
+function baseSelection(){
   const T=S.setup;let cards;
-  if(T.stopOnly)cards=S.cards.filter(c=>c.stop);
-  else if(T.sel.has('__all'))cards=normalCards();
+  if(T.sel.has('__all'))cards=normalCards();
   else{const ids=new Set();S.cats.filter(k=>T.sel.has(k.id)).forEach(k=>k.cardIds.forEach(i=>ids.add(i)));cards=S.cards.filter(c=>ids.has(c.id)&&!c.stop)}
-  const seen=new Set();cards=cards.filter(c=>!seen.has(c.id)&&seen.add(c.id));
-  return T.shuffle?shuffle(cards):cards;
+  const seen=new Set();return cards.filter(c=>!seen.has(c.id)&&seen.add(c.id));
+}
+/* «Круг»: выученные в этом режиме слова не повторяются, пока не пройдены все слова выбранных категорий */
+function cycleStats(){
+  const base=baseSelection(),passed=new Set(S.cycle[S.mode]||[]);
+  const done=base.filter(c=>passed.has(c.id)).length;
+  return {total:base.length,done,left:base.length-done};
+}
+const saveCycle=()=>dbPut('meta',{k:'cycle',...S.cycle}).catch(()=>{});
+function updCycle(){
+  const box=$('#cycleInfo');if(!box)return;const T=S.setup;
+  if(T.stopOnly){const n=S.cards.filter(c=>c.stop).length;
+    box.textContent=`В стоп-листе слов: ${n}. Круг для стоп-листа не ведётся.`;return}
+  const c=cycleStats(),cap=T.count>0?Math.min(T.count,c.left||c.total):(c.left||c.total);
+  box.innerHTML=(c.total?`Круг (${MODES[S.mode]}): пройдено ${c.done} из ${c.total}, осталось ${c.left}. `+
+    (c.left===0?'Круг завершён, следующий запуск начнёт новый. ':`В эту сессию попадёт слов: ${cap}. `):'Нет слов для повторения. ')+
+    (c.done?'<button class="chip" id="resetCycle" style="margin-top:8px">Начать круг заново</button>':'');
+  const r=$('#resetCycle');
+  if(r)r.onclick=()=>{const ids=new Set(baseSelection().map(x=>x.id));S.cycle[S.mode]=(S.cycle[S.mode]||[]).filter(i=>!ids.has(i));saveCycle();updCycle()};
+}
+function buildQueue(){
+  const T=S.setup;let cards,newCycle=false;
+  if(T.stopOnly)cards=S.cards.filter(c=>c.stop);
+  else{
+    const base=baseSelection(),passed=new Set(S.cycle[S.mode]||[]);
+    cards=base.filter(c=>!passed.has(c.id));
+    if(!cards.length&&base.length){
+      const ids=new Set(base.map(x=>x.id));S.cycle[S.mode]=(S.cycle[S.mode]||[]).filter(i=>!ids.has(i));saveCycle();
+      cards=base;newCycle=true;
+    }
+  }
+  if(T.shuffle)cards=shuffle(cards);
+  if(T.count>0)cards=cards.slice(0,T.count);
+  return {queue:cards,newCycle};
 }
 function startSession(){
-  const q=buildQueue();
+  const {queue:q,newCycle}=buildQueue();
   if(!q.length){$('#setupMsg').textContent='В выбранных категориях нет карточек для повторения. Отметьте другие или добавьте карточки.';return}
   if(S.mode==='choice'&&uniqueAnswers(S.cards).length<2){$('#setupMsg').textContent='Для режима с вариантами нужно хотя бы две разные карточки в пуле.';return}
   S.study={phase:'run',queue:q,i:0,ok:[],bad:[],stopped:[],answered:false};
+  if(newCycle)toast('Круг пройден, начинаем новый');
   viewStudy();
 }
 const shownOf=(c)=>S.setup.side==='front'?c.front:c.back;
@@ -486,6 +716,7 @@ function bindRun(v){
 }
 async function mark(c,res){
   await logEvent(c.id,res);(res==='ok'?S.study.ok:S.study.bad).push(c.id);
+  if(res==='ok'&&!S.setup.stopOnly){const a=S.cycle[S.mode]||(S.cycle[S.mode]=[]);if(!a.includes(c.id)){a.push(c.id);saveCycle()}}
 }
 function next(skipLog){
   const s=S.study;s.i++;s.options=null;s.answered=false;
@@ -526,7 +757,7 @@ function bindChoice(c){
   });
 }
 /* письмо */
-function variants(t){return String(t).split(/[,;\/]/).map(norm).filter(Boolean)}
+const variants=variantKeys;
 function bindWrite(c){
   const s=S.study,inp=$('#ans');setTimeout(()=>inp.focus(),50);
   const go=async()=>{
@@ -539,9 +770,9 @@ function bindWrite(c){
     const b=$('#check');b.textContent='Дальше';b.focus();
   };
   $('#check').onclick=go;
-  inp.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();go()}});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!isIME(e)){e.preventDefault();go()}});
   document.addEventListener('keydown',function h(e){if(!$('#check')){document.removeEventListener('keydown',h);return}
-    if(e.key==='Enter'&&s.answered&&document.activeElement!==$('#check')){e.preventDefault();go()}});
+    if(e.key==='Enter'&&!isIME(e)&&s.answered&&document.activeElement!==$('#check')){e.preventDefault();go()}});
 }
 /* итог */
 function doneHtml(){
@@ -550,6 +781,7 @@ function doneHtml(){
     <div class="card"><b class="num" style="color:var(--ok)">✓ ${s.ok.length}</b><span>выучено</span></div>
     <div class="card"><b class="num" style="color:var(--bad)">✗ ${s.bad.length}</b><span>недоучено</span></div>
     <div class="card"><b class="num" style="color:var(--stop)">○ ${s.stopped.length}</b><span>в стоп-лист</span></div></div>
+    ${S.setup.stopOnly?'':(()=>{const c=cycleStats();return `<div class="sub" style="text-align:center">Круг (${MODES[S.mode]}): пройдено ${c.done} из ${c.total}, осталось ${c.left}.</div>`})()}
     <div class="stack">${s.bad.length?'<button class="btn block" id="again">Повторить недоученные</button>':''}<button class="btn soft block" id="back">К выбору категорий</button></div>`;
 }
 function bindDone(v){
@@ -616,7 +848,11 @@ async function init(){
   await openDB();
   try{
     S.cards=await dbAll('cards');S.cats=await dbAll('cats');S.events=await dbAll('events');
-    const m=(await dbAll('meta')).find(x=>x.k==='meta');if(m){const{k,...rest}=m;S.meta={...S.meta,...rest}}
+    const metaAll=await dbAll('meta');
+    const m=metaAll.find(x=>x.k==='meta');if(m){const{k,...rest}=m;S.meta={...S.meta,...rest}}
+    const dr=metaAll.find(x=>x.k==='drafts');if(dr){const{k,...rest}=dr;S.drafts=rest}
+    const cy=metaAll.find(x=>x.k==='cycle');if(cy){const{k,...rest}=cy;S.cycle={classic:[],choice:[],write:[],...rest}}
+    if(typeof S.meta.count==='number')S.setup.count=S.meta.count;
     if(!S.meta.seeded&&!S.cards.length){
       /* примеры при первом запуске; их можно удалить */
       const t=Date.now();
@@ -630,12 +866,12 @@ async function init(){
   if(memMode)setTimeout(()=>toast('Хранилище недоступно: данные сохранятся только до закрытия страницы'),600);
 }
 init();
+
 </script>
 <script>
 if('serviceWorker' in navigator && location.protocol.startsWith('http')){
   addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 }
 </script>
-
 </body>
 </html>
