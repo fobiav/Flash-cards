@@ -115,6 +115,9 @@ input.is-dup{border-color:var(--bad)!important}
 .chips .chip{padding:6px 11px;font-size:13px;box-shadow:none;background:var(--surface2)}
 .chips .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
 .cnt{width:84px!important;text-align:center}
+.stage,.q{position:relative}
+.pencil{position:absolute;right:12px;bottom:12px;width:38px;height:38px;border-radius:50%;background:var(--surface2);color:var(--accent);z-index:6;display:grid;place-items:center;font-size:17px;font-weight:800}
+.q .pencil{bottom:10px}
 
 .toast{position:fixed;left:50%;bottom:calc(100px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:14px;font-weight:700;z-index:60;font-size:14px}
 /* study */
@@ -154,6 +157,16 @@ input.is-dup{border-color:var(--bad)!important}
 .spark{display:flex;align-items:flex-end;gap:6px;height:90px}
 .spark div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:100%;font-size:11px;color:var(--muted)}
 .spark i{width:100%;border-radius:8px 8px 4px 4px;background:var(--grad);min-height:3px}
+@media (min-width:700px){#app{max-width:720px}nav.tabs .bar{max-width:720px}.sheet{max-width:720px}}
+@media (orientation:landscape) and (max-height:560px){
+  header.top{padding:8px 0 6px}
+  main{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .stage{height:min(40vh,250px);margin:6px 0}
+  .q{padding:16px;margin:8px 0}
+  .face .txt{font-size:clamp(22px,5vw,32px)}
+  .round{width:46px;height:46px;font-size:22px}.round.stop{width:40px;height:40px;font-size:18px}
+  nav.tabs button{flex-direction:row;justify-content:center;gap:6px;padding:6px 2px}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -213,7 +226,7 @@ async function dbClear(store){
 
 /* ---------- Состояние ---------- */
 const S={cards:[],cats:[],events:[],meta:{theme:'auto',frontLang:'Иностранный',seeded:false},
-  tab:'cards',cardFilter:'all',query:'',study:null,drafts:{},cycle:{classic:[],choice:[],write:[]}};
+  tab:'cards',cardFilter:'all',query:'',study:null,drafts:{},folders:[],collapsed:new Set(),cycle:{classic:[],choice:[],write:[],chain:[]}};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
 const $=(s,r=document)=>r.querySelector(s);
 const esc=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -263,9 +276,23 @@ function cardStats(){
 }
 async function logEvent(cardId,result){
   const ev={id:uid(),c:cardId,r:result,t:Date.now()};
-  S.events.push(ev);await dbPut('events',ev);
+  S.events.push(ev);await dbPut('events',ev);return ev;
 }
 
+/* ---------- Папки категорий ---------- */
+const saveFolders=()=>dbPut('meta',{k:'folders',list:S.folders}).catch(()=>{});
+function groupedCats(){
+  const out=S.folders.map(f=>({folder:f,cats:S.cats.filter(k=>k.folderId===f.id)}));
+  const loose=S.cats.filter(k=>!k.folderId||!byId(S.folders,k.folderId));
+  if(loose.length||!S.folders.length)out.push({folder:null,cats:loose});
+  return out;
+}
+/* чипы категорий, сгруппированные по папкам; on(id) решает, нажат ли чип */
+function catChips(on){
+  const groups=groupedCats(),multi=S.folders.length>0;
+  return groups.filter(g=>g.cats.length).map(g=>(multi?`<div class="cap" style="flex-basis:100%;margin:4px 0 0">${g.folder?esc(g.folder.name):'Без папки'}</div>`:'')+
+    g.cats.map(k=>`<button type="button" class="chip" data-c="${k.id}" aria-pressed="${on(k.id)}">${esc(k.name)}</button>`).join('')).join('');
+}
 /* ---------- Тема ---------- */
 function applyTheme(){
   const r=document.documentElement;
@@ -293,14 +320,16 @@ function openSheet(html,onMount,foot){
   bg.addEventListener('click',e=>{if(e.target===bg&&down)closeSheet();down=false});
   $('#layer').appendChild(bg);onMount&&onMount(bg.firstChild);
 }
-function closeSheet(){const b=$('#sheetBg');if(b)b.remove()}
+function closeSheet(){const b=$('#sheetBg');if(b)b.remove();S.afterEdit=null}
+/* после правки карточки из режима обучения вызывается его обработчик, иначе обычная перерисовка */
+function finishEdit(){const f=S.afterEdit;closeSheet();if(f)f();else render()}
 
 /* ---------- Вкладка: карточки ---------- */
 function viewCards(){
   const v=$('#view');
   v.innerHTML=`
     <div style="margin-bottom:10px"><input type="text" id="q" placeholder="Поиск по карточкам" value="${esc(S.query)}" aria-label="Поиск" autocomplete="off"></div>
-    <div class="row" style="margin-bottom:10px"><button class="btn grow" id="addCard">＋ Карточка</button><button class="btn soft grow" id="addMany">＋ Несколько слов</button></div>
+    <div class="row" style="margin-bottom:10px"><button class="btn grow" id="addCard">＋ Карточка</button><button class="btn soft grow" id="addMany">＋ Несколько карточек</button></div>
     <div class="row wrap" id="chipsRow" style="margin-bottom:14px"></div>
     <div class="stack" id="cardList"></div>`;
   clearable($('#q'));
@@ -354,7 +383,7 @@ function editCard(id){
   const dr=!c?(S.drafts.card||{}):{};
   const myCats=c?S.cats.filter(k=>k.cardIds.includes(c.id)).map(k=>k.id):(dr.cats||[]).filter(i=>byId(S.cats,i));
   const catsHtml=S.cats.length?`<div><label class="f">Категории (<span id="fCatN" class="num">${myCats.length}</span>)</label>
-    <div class="catbox" id="fCats">${S.cats.map(k=>`<label class="check compact"><input type="checkbox" value="${k.id}" ${myCats.includes(k.id)?'checked':''}><span class="grow">${esc(k.name)}</span></label>`).join('')}</div></div>`:'';
+    <div class="catbox" id="fCats">${groupedCats().filter(g=>g.cats.length).map(g=>(S.folders.length?`<div class="cap" style="margin:6px 2px 0">${g.folder?esc(g.folder.name):'Без папки'}</div>`:'')+g.cats.map(k=>`<label class="check compact"><input type="checkbox" value="${k.id}" ${myCats.includes(k.id)?'checked':''}><span class="grow">${esc(k.name)}</span></label>`).join('')).join('')}</div></div>`:'';
   openSheet(`<h2>${c?'Редактировать карточку':'Новая карточка'}</h2>
     <div class="stack">
       <div><label class="f" for="fFront">${esc(S.meta.frontLang)} (лицевая сторона)</label>
@@ -392,7 +421,7 @@ function editCard(id){
       if(touched.length)await dbPutMany('cats',touched);
       toast('Сохранено');
       if(!c&&again){saveDraft('card',{front:'',back:'',cats:sel});render();editCard()}
-      else{if(!c)clearDraft('card');closeSheet();render()}
+      else{if(!c)clearDraft('card');finishEdit()}
     };
     $('#fSave').onclick=()=>save(false);
     const n=$('#fSaveNext');if(n)n.onclick=()=>save(true);
@@ -406,8 +435,7 @@ function editCard(id){
         S.cards=S.cards.filter(x=>x.id!==c.id);await dbDel('cards',c.id);
         const touched=S.cats.filter(k=>k.cardIds.includes(c.id));touched.forEach(k=>k.cardIds=k.cardIds.filter(x=>x!==c.id));
         if(touched.length)await dbPutMany('cats',touched);
-        S.events=S.events.filter(e=>e.c!==c.id);
-        closeSheet();toast('Карточка удалена');render();
+        toast('Карточка удалена');finishEdit();
       };
     };
   },c?`<div class="row"><button class="btn grow" id="fSave">Сохранить</button><button class="btn danger" id="fDel">Удалить</button></div>`
@@ -421,7 +449,7 @@ function editMany(){
   const R=(dr.rows&&dr.rows.length?dr.rows:Array.from({length:5},()=>({}))).map(r=>({f:r.f||'',b:r.b||'',cats:r.cats?r.cats.filter(i=>byId(S.cats,i)):null}));
   const existing=new Map();S.cards.forEach(c=>variantKeys(c.front).forEach(k=>existing.set(k,c)));
   const names=(ids)=>ids.map(i=>byId(S.cats,i)?.name).filter(Boolean);
-  openSheet(`<h2>Несколько слов сразу</h2>
+  openSheet(`<h2>Несколько карточек сразу</h2>
     <div class="sub">Слово — перевод = категории. Несколько вариантов пишите через запятую. Enter в поле перевода переходит к следующей строке.</div>
     <div class="stack">
       <div><label class="f">Категории для всех строк</label>
@@ -444,8 +472,7 @@ function editMany(){
       el.querySelector('.rf').classList.toggle('is-dup',!!d);
       w.innerHTML=d?`<div class="warn" style="margin:0">⚠ ${d.card?`Уже есть: <b>${esc(d.card.front)}</b> — ${esc(d.card.back)}. Эта строка будет пропущена.`:'Повтор в этом списке. Эта строка будет пропущена.'}</div>`:''});
     const label=(r)=>{const ids=r.cats||def;const n=names(ids).join(', ')||'без категории';return r.cats?('= '+n):('= как у всех: '+n)};
-    const chipsFor=(r)=>`<button type="button" class="chip" data-same aria-pressed="${r.cats===null}">как у всех</button>`+
-      S.cats.map(k=>`<button type="button" class="chip" data-c="${k.id}" aria-pressed="${(r.cats||[]).includes(k.id)}">${esc(k.name)}</button>`).join('');
+    const chipsFor=(r)=>`<button type="button" class="chip" data-same aria-pressed="${r.cats===null}">как у всех</button>`+catChips(id=>(r.cats||[]).includes(id));
     const addRow=(r,focus)=>{
       const el=document.createElement('div');el.className='brow';el._r=r;
       el.innerHTML=`<div class="in"><input type="text" class="rf" placeholder="${esc(S.meta.frontLang)}" value="${esc(r.f)}" autocomplete="off" autocapitalize="none"><span class="dash">—</span>
@@ -471,7 +498,7 @@ function editMany(){
     };
     R.forEach(r=>addRow(r));recheck();upBtn();
     const defBox=$('#defChips');
-    const drawDef=()=>{if(!defBox)return;defBox.innerHTML=S.cats.map(k=>`<button type="button" class="chip" data-c="${k.id}" aria-pressed="${def.includes(k.id)}">${esc(k.name)}</button>`).join('')};
+    const drawDef=()=>{if(!defBox)return;defBox.innerHTML=catChips(id=>def.includes(id))};
     drawDef();
     if(defBox)defBox.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const id=b.dataset.c;
       def=def.includes(id)?def.filter(x=>x!==id):[...def,id];drawDef();
@@ -502,22 +529,57 @@ function editMany(){
   },`<button class="btn block" id="bSave">Сохранить всё</button>`);
 }
 
-/* ---------- Вкладка: категории ---------- */
+/* ---------- Вкладка: категории и папки ---------- */
 function viewCats(){
   const v=$('#view');
-  v.innerHTML=`<div class="row" style="margin-bottom:12px"><div class="grow sub" style="margin:0">Одна карточка может входить в несколько категорий.</div><button class="btn" id="addCat">＋ Категория</button></div>
-    <div class="stack">${S.cats.length?S.cats.map(k=>`<button class="item" data-cat="${k.id}" style="text-align:left;width:100%"><div class="w"><b>${esc(k.name)}</b><span class="num">карточек: ${k.cardIds.filter(id=>byId(S.cards,id)).length}</span></div><span style="color:var(--muted);font-size:22px">›</span></button>`).join(''):
-      '<div class="empty">Категорий пока нет.<br>Создайте тему, например «Еда» или «Путешествия», и добавьте в неё карточки из общего пула.</div>'}</div>`;
+  const catItem=(k)=>`<button class="item" data-cat="${k.id}" style="text-align:left;width:100%"><div class="w"><b>${esc(k.name)}</b><span class="num">карточек: ${k.cardIds.filter(id=>byId(S.cards,id)).length}</span></div><span style="color:var(--muted);font-size:22px">›</span></button>`;
+  const groups=groupedCats();
+  const body=groups.map(g=>{
+    if(!g.folder){
+      if(!g.cats.length)return '';
+      return (S.folders.length?'<div class="cap" style="margin:14px 2px 2px">Без папки</div>':'')+`<div class="stack">${g.cats.map(catItem).join('')}</div>`;
+    }
+    const f=g.folder,open=!S.collapsed.has(f.id);
+    return `<div class="stack" style="margin-bottom:12px"><div class="row"><button class="item grow" data-fold="${f.id}" style="text-align:left;background:var(--surface2);box-shadow:none"><span style="font-size:18px;color:var(--accent)">${open?'▾':'▸'}</span><div class="w"><b>${esc(f.name)}</b><span class="num">категорий: ${g.cats.length}</span></div></button>
+      <button class="icon-btn" data-editfold="${f.id}" aria-label="Изменить папку" title="Изменить папку">✎</button></div>
+      ${open?(g.cats.length?g.cats.map(catItem).join(''):'<div class="sub" style="margin:0 4px">Папка пока пуста. Откройте категорию и выберите эту папку.</div>'):''}</div>`;
+  }).join('');
+  v.innerHTML=`<div class="row" style="margin-bottom:12px"><button class="btn grow" id="addCat">＋ Категория</button><button class="btn soft grow" id="addFolder">＋ Папка</button></div>
+    <div class="sub">Одна карточка может входить в несколько категорий. Категории можно складывать в папки.</div>
+    ${S.cats.length||S.folders.length?body:'<div class="empty">Категорий пока нет.<br>Создайте тему, например «Еда» или «Путешествия», и добавьте в неё карточки из общего пула.</div>'}`;
   $('#addCat').onclick=()=>editCat();
+  $('#addFolder').onclick=()=>editFolder();
   v.querySelectorAll('[data-cat]').forEach(b=>b.onclick=()=>editCat(b.dataset.cat));
+  v.querySelectorAll('[data-fold]').forEach(b=>b.onclick=()=>{const id=b.dataset.fold;S.collapsed.has(id)?S.collapsed.delete(id):S.collapsed.add(id);viewCats()});
+  v.querySelectorAll('[data-editfold]').forEach(b=>b.onclick=()=>editFolder(b.dataset.editfold));
 }
-function editCat(id){
+function editFolder(id){
+  const f=id?byId(S.folders,id):null;
+  openSheet(`<h2>${f?'Папка':'Новая папка'}</h2>
+    <div><label class="f" for="fdName">Название</label><input type="text" id="fdName" value="${esc(f?.name||'')}" autocomplete="off" placeholder="Например: Глаголы"></div>
+    ${f?`<div class="sub" style="margin-top:12px">Категорий в папке: ${S.cats.filter(k=>k.folderId===f.id).length}. При удалении папки категории и карточки останутся, просто окажутся вне папки.</div>`:''}`,
+  ()=>{
+    clearable($('#fdName'));setTimeout(()=>$('#fdName').focus(),50);
+    $('#fdSave').onclick=async()=>{
+      const name=$('#fdName').value.trim();if(!name){toast('Введите название');return}
+      if(f)f.name=name;else S.folders.push({id:uid(),name});
+      await saveFolders();closeSheet();toast('Сохранено');render();
+    };
+    const d=$('#fdDel');
+    if(d)d.onclick=()=>{d.textContent='Точно удалить?';d.onclick=async()=>{
+      const touched=S.cats.filter(k=>k.folderId===f.id);touched.forEach(k=>delete k.folderId);
+      if(touched.length)await dbPutMany('cats',touched);
+      S.folders=S.folders.filter(x=>x.id!==f.id);await saveFolders();closeSheet();toast('Папка удалена');render()}};
+  },`<div class="row"><button class="btn grow" id="fdSave">Сохранить</button>${f?'<button class="btn danger" id="fdDel">Удалить</button>':''}</div>`);
+}
+function editCat(id,defFolder){
   const k=id?byId(S.cats,id):null;
   const sel=new Set(k?k.cardIds.filter(i=>byId(S.cards,i)):[]);
   const sorted=S.cards.slice().sort((a,b)=>a.front.localeCompare(b.front));
   const item=(c,mark,cls)=>`<button type="button" class="pi ${cls||''}" data-id="${c.id}"><span class="t"><b>${esc(c.front)}</b><span>${esc(c.back)}</span></span><span class="m">${mark}</span></button>`;
   openSheet(`<h2>${k?'Категория':'Новая категория'}</h2>
     <div><label class="f" for="cName">Название</label><input type="text" id="cName" value="${esc(k?.name||'')}" autocomplete="off"></div>
+    ${S.folders.length?`<div style="margin-top:10px"><label class="f" for="cFolder">Папка</label><select id="cFolder"><option value="">— без папки —</option>${S.folders.map(f=>`<option value="${f.id}" ${(k?k.folderId:defFolder)===f.id?'selected':''}>${esc(f.name)}</option>`).join('')}</select></div>`:''}
     <div class="two" style="margin-top:14px">
       <div><div class="cap">В категории: <span id="cN" class="num"></span></div><div class="plist" id="cLeft"></div></div>
       <div><div class="cap">Все слова: <span class="num">${S.cards.length}</span></div><input type="text" id="cSearch" placeholder="Поиск" autocomplete="off" style="margin-bottom:8px;padding:9px 12px"><div class="plist" id="cPool"></div></div>
@@ -540,7 +602,7 @@ function editCat(id){
     $('#cSave').onclick=async()=>{
       const name=$('#cName').value.trim();if(!name){toast('Введите название');return}
       let cat=k;if(!cat){cat={id:uid(),name,cardIds:[]};S.cats.push(cat)}
-      cat.name=name;cat.cardIds=[...sel];await dbPut('cats',cat);closeSheet();toast('Сохранено');render();
+      cat.name=name;cat.cardIds=[...sel];const fs=$('#cFolder');if(fs){if(fs.value)cat.folderId=fs.value;else delete cat.folderId}await dbPut('cats',cat);closeSheet();toast('Сохранено');render();
     };
     const d=$('#cDel');
     if(d)d.onclick=()=>{d.textContent='Точно удалить?';d.onclick=async()=>{
@@ -561,7 +623,7 @@ function openMenu(){
     $('#mSaveLang').onclick=async()=>{S.meta.frontLang=$('#mLang').value.trim()||'Иностранный';await dbPut('meta',{k:'meta',...S.meta});closeSheet();render()};
     $('#mExport').onclick=()=>{
       const t=$('#mText');t.style.display='block';
-      t.value=JSON.stringify({v:1,cards:S.cards,cats:S.cats,events:S.events,meta:S.meta,cycle:S.cycle});t.select();
+      t.value=JSON.stringify({v:1,cards:S.cards,cats:S.cats,events:S.events,meta:S.meta,cycle:S.cycle,folders:S.folders});t.select();
       try{navigator.clipboard.writeText(t.value).then(()=>toast('Скопировано'),()=>toast('Выделено. Скопируйте вручную'))}catch(e){toast('Выделено. Скопируйте вручную')}
     };
     const doImport=async(text)=>{
@@ -569,7 +631,8 @@ function openMenu(){
         await dbClear('cards');await dbClear('cats');await dbClear('events');
         await dbPutMany('cards',d.cards);await dbPutMany('cats',d.cats||[]);await dbPutMany('events',d.events||[]);
         S.cards=d.cards;S.cats=d.cats||[];S.events=d.events||[];
-        if(d.cycle){S.cycle={classic:[],choice:[],write:[],...d.cycle};await dbPut('meta',{k:'cycle',...S.cycle})}
+        if(Array.isArray(d.folders)){S.folders=d.folders;await saveFolders()}
+        if(d.cycle){S.cycle={classic:[],choice:[],write:[],chain:[],...d.cycle};await dbPut('meta',{k:'cycle',...S.cycle})}
         if(d.meta){S.meta={...S.meta,...d.meta};await dbPut('meta',{k:'meta',...S.meta})}
         applyTheme();closeSheet();toast('Данные восстановлены');render();
       }catch(e){toast('Не удалось прочитать копию')}
@@ -580,7 +643,9 @@ function openMenu(){
   });
 }
 /* ---------- Вкладка: учить ---------- */
-const MODES={classic:'Классика',choice:'Варианты',write:'Письмо'};
+const MODES={classic:'Классика',choice:'Варианты',write:'Письмо',chain:'Все три подряд',daily:'Карточки дня'};
+const STAGES=['classic','choice','write'];
+S.dailyHow='chain';S.daily=null;
 S.setup={sel:new Set(['__all']),side:'front',shuffle:true,stopOnly:false,count:20};
 S.mode='classic';
 
@@ -588,7 +653,7 @@ function enterStudy(reset){if(reset||!S.study)S.study={phase:'setup'};render()}
 function viewStudy(){
   const v=$('#view');
   const tabs=`<div class="row wrap" style="margin-bottom:14px">${Object.entries(MODES).map(([k,n])=>`<button class="chip" data-mode="${k}" aria-pressed="${S.mode===k}">${n}</button>`).join('')}</div>`;
-  if(S.study.phase==='setup'){v.innerHTML=tabs+setupHtml();bindSetup(v)}
+  if(S.study.phase==='setup'){v.innerHTML=tabs+(S.mode==='daily'?dailySetupHtml():setupHtml());S.mode==='daily'?bindDaily(v):bindSetup(v)}
   else if(S.study.phase==='done'){v.innerHTML=doneHtml();bindDone(v)}
   else{v.innerHTML=runShell();bindRun(v)}
   v.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{S.mode=b.dataset.mode;S.study={phase:'setup'};viewStudy()});
@@ -597,12 +662,13 @@ const normalCards=()=>S.cards.filter(c=>!c.stop);
 function setupHtml(){
   const T=S.setup, stopN=S.cards.filter(c=>c.stop).length;
   const hint={classic:'Смахивайте карточку: вправо, если выучили, влево, если ещё нет. Касание переворачивает карточку.',
-    choice:'К слову нужно выбрать верный перевод из вариантов.',write:'К слову нужно ввести ответ самостоятельно.'}[S.mode];
+    choice:'К слову нужно выбрать верный перевод из вариантов.',write:'К слову нужно ввести ответ самостоятельно.',
+    chain:'Выбранные слова проходят три этапа подряд: Классика, Варианты, Письмо. На каждом этапе слова повторяются, пока все не будут выучены.'}[S.mode];
   const catRow=(id,name,n)=>`<label class="check"><input type="checkbox" data-sel="${id}" ${T.sel.has(id)&&!T.stopOnly?'checked':''} ${T.stopOnly?'disabled':''}><span class="grow">${esc(name)}</span><span class="pill neutral num">${n}</span></label>`;
   return `<h2>Что повторяем?</h2><div class="sub">${hint}</div>
     <div class="stack">
       ${catRow('__all','Все карточки',normalCards().length)}
-      ${S.cats.map(k=>catRow(k.id,k.name,k.cardIds.map(id=>byId(S.cards,id)).filter(c=>c&&!c.stop).length)).join('')}
+      ${setupCatRows(catRow)}
       <label class="check" style="background:var(--stop-bg)"><input type="checkbox" id="stopOnly" ${T.stopOnly?'checked':''}><span class="grow" style="color:var(--stop);font-weight:800">○ Только стоп-лист</span><span class="pill stop num">${stopN}</span></label>
     </div>
     <h2 style="margin-top:20px">Сколько слов за раз</h2>
@@ -616,9 +682,22 @@ function setupHtml(){
     <div id="setupMsg" class="sub" style="margin:12px 0 0"></div>
     <button class="btn block" id="go" style="margin-top:10px">Начать</button>`;
 }
+const countOf=(k)=>k.cardIds.map(id=>byId(S.cards,id)).filter(c=>c&&!c.stop).length;
+function setupCatRows(catRow){
+  const T=S.setup,multi=S.folders.length>0;
+  return groupedCats().filter(g=>g.cats.length).map(g=>{
+    const rows=g.cats.map(k=>catRow(k.id,k.name,countOf(k))).join('');
+    if(!g.folder)return (multi?'<div class="cap" style="margin:8px 2px 0">Без папки</div>':'')+rows;
+    const all=g.cats.every(k=>T.sel.has(k.id));
+    return `<label class="check" style="background:var(--surface2);box-shadow:none"><input type="checkbox" data-folder="${g.folder.id}" ${all&&!T.stopOnly?'checked':''} ${T.stopOnly?'disabled':''}><span class="grow"><b>${esc(g.folder.name)}</b> <span style="color:var(--muted)">· вся папка</span></span><span class="pill neutral num">${g.cats.length}</span></label><div class="stack" style="margin-left:14px">${rows}</div>`;
+  }).join('');
+}
 function bindSetup(v){
   const T=S.setup;
-  v.querySelectorAll('[data-sel]').forEach(i=>i.onchange=()=>{i.checked?T.sel.add(i.dataset.sel):T.sel.delete(i.dataset.sel);updCycle()});
+  v.querySelectorAll('[data-sel]').forEach(i=>i.onchange=()=>{const id=i.dataset.sel;
+    if(i.checked){if(id==='__all')T.sel.clear();else T.sel.delete('__all');T.sel.add(id)}else T.sel.delete(id);viewStudy()});
+  v.querySelectorAll('[data-folder]').forEach(i=>i.onchange=()=>{T.sel.delete('__all');
+    S.cats.filter(k=>k.folderId===i.dataset.folder).forEach(k=>i.checked?T.sel.add(k.id):T.sel.delete(k.id));viewStudy()});
   const setCount=(n)=>{T.count=n;S.meta.count=n;dbPut('meta',{k:'meta',...S.meta}).catch(()=>{})};
   v.querySelectorAll('[data-cnt]').forEach(b=>b.onclick=()=>{setCount(+b.dataset.cnt);viewStudy()});
   v.querySelector('#cnt').addEventListener('input',e=>{const n=parseInt(e.target.value,10);
@@ -668,11 +747,17 @@ function buildQueue(){
   if(T.count>0)cards=cards.slice(0,T.count);
   return {queue:cards,newCycle};
 }
+/* ---------- Запуск сессии ---------- */
+const stopMode=()=>!!(S.study&&!S.study.daily&&S.setup.stopOnly);
+function curMode(){const s=S.study;if(s&&s.chain)return STAGES[s.chain.stage];return (s&&s.single)||S.mode}
+const needsPool=(m)=>m==='choice'||m==='chain';
 function startSession(){
+  if(S.mode==='daily')return startDaily();
   const {queue:q,newCycle}=buildQueue();
   if(!q.length){$('#setupMsg').textContent='В выбранных категориях нет карточек для повторения. Отметьте другие или добавьте карточки.';return}
-  if(S.mode==='choice'&&uniqueAnswers(S.cards).length<2){$('#setupMsg').textContent='Для режима с вариантами нужно хотя бы две разные карточки в пуле.';return}
-  S.study={phase:'run',queue:q,i:0,ok:[],bad:[],stopped:[],answered:false};
+  if(needsPool(S.mode)&&uniqueAnswers(S.cards).length<2){$('#setupMsg').textContent='Для этого режима нужно хотя бы две разные карточки в пуле.';return}
+  S.study={phase:'run',queue:q,i:0,ok:[],bad:[],stopped:[],answered:false,hist:[],hint:0,daily:false,
+    single:S.mode==='chain'?null:S.mode,chain:S.mode==='chain'?{stage:0,round:1,batch:q.slice(),total:q.length}:null};
   if(newCycle)toast('Круг пройден, начинаем новый');
   viewStudy();
 }
@@ -681,46 +766,102 @@ const answerOf=(c)=>S.setup.side==='front'?c.back:c.front;
 const langShown=()=>S.setup.side==='front'?S.meta.frontLang:'Русский';
 const langAnswer=()=>S.setup.side==='front'?'Русский':S.meta.frontLang;
 const uniqueAnswers=(cards)=>{const seen=new Set();return cards.filter(c=>{const k=norm(answerOf(c));if(seen.has(k))return false;seen.add(k);return true})};
+function stageLabel(){const ch=S.study.chain;if(!ch)return '';
+  return `Этап ${ch.stage+1} из 3 · ${MODES[STAGES[ch.stage]]}`+(ch.round>1?` · повтор ${ch.round-1}`:'')}
 
 function runShell(){
-  const s=S.study,c=s.queue[s.i];
-  const head=`<div class="row" style="margin-bottom:6px"><button class="chip" id="quit">✕ Выйти</button><div class="grow"></div><span class="num" style="font-weight:800;color:var(--muted)">${s.i+1} / ${s.queue.length}</span></div>
+  const s=S.study,c=s.queue[s.i],m=curMode();
+  const head=`<div class="row" style="margin-bottom:6px"><button class="chip" id="quit">✕ Выйти</button>${m==='classic'?`<button class="chip" id="bBack" ${s.hist.length?'':'disabled style="opacity:.45"'}>↶ Назад</button>`:''}<div class="grow"></div><span class="num" style="font-weight:800;color:var(--muted)">${s.i+1} / ${s.queue.length}</span></div>
+    ${s.chain?`<div class="sub" style="margin:0 0 6px;text-align:center;font-weight:800;color:var(--accent)">${esc(stageLabel())}</div>`:''}
     <div class="progress"><i style="width:${(s.i/s.queue.length)*100}%"></i></div>`;
   const stopLabel=c.stop?'Достать из стоп-листа':'В стоп-лист';
-  if(S.mode==='classic')return head+`
+  const pencil='<button class="pencil" id="bEdit" aria-label="Редактировать карточку" title="Редактировать карточку">✎</button>';
+  if(m==='classic')return head+`
     <div class="stage" id="stage"><div class="drag-wrap" id="dw"><div class="badge-over l" id="bl">✗</div><div class="badge-over r" id="br">✓</div>
       <div class="flip" id="flip"><div class="face front"><span class="lang">${esc(langShown())}</span><div class="txt">${esc(shownOf(c))}</div><span class="hint">коснитесь, чтобы перевернуть</span></div>
-      <div class="face back"><span class="lang">${esc(langAnswer())}</span><div class="txt">${esc(answerOf(c))}</div><span class="hint">← ещё нет · выучено →</span></div></div></div></div>
+      <div class="face back"><span class="lang">${esc(langAnswer())}</span><div class="txt">${esc(answerOf(c))}</div><span class="hint">← ещё нет · выучено →</span></div></div></div>${pencil}</div>
     <div class="actions"><button class="round bad" id="bBad" aria-label="Ещё не выучено">✗</button><button class="round stop" id="bStop" aria-label="${stopLabel}" title="${stopLabel}">○</button><button class="round ok" id="bOk" aria-label="Выучено">✓</button></div>`;
   const stopBtn=`<div class="row" style="justify-content:center;margin-top:14px"><button class="chip" id="bStop" style="color:var(--stop)">○ ${stopLabel}</button></div>`;
-  if(S.mode==='choice'){
+  if(m==='choice'){
     if(!s.options){
       const pool=uniqueAnswers(S.cards.filter(x=>x.id!==c.id&&norm(answerOf(x))!==norm(answerOf(c))));
       s.options=shuffle([c,...shuffle(pool).slice(0,3)]);
     }
-    return head+`<div class="q"><span class="lang">${esc(langShown())}</span><div class="txt">${esc(shownOf(c))}</div></div>
+    return head+`<div class="q"><span class="lang">${esc(langShown())}</span><div class="txt">${esc(shownOf(c))}</div>${pencil}</div>
       <div class="stack" id="opts">${s.options.map((o,n)=>`<button class="opt" data-o="${n}">${esc(answerOf(o))}</button>`).join('')}</div>
       <div id="fb" style="margin-top:12px"></div>${stopBtn}`;
   }
-  return head+`<div class="q"><span class="lang">${esc(langShown())}</span><div class="txt">${esc(shownOf(c))}</div></div>
+  return head+`<div class="q"><span class="lang">${esc(langShown())}</span><div class="txt">${esc(shownOf(c))}</div>${pencil}</div>
     <div class="stack"><input type="text" id="ans" placeholder="Ваш ответ (${esc(langAnswer())})" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
-    <div id="fb"></div><button class="btn block" id="check">Проверить</button></div>${stopBtn}`;
+    <div id="hintBox" class="feedback" style="background:var(--surface2);color:var(--fg);font-size:22px;letter-spacing:.12em;text-align:center" hidden></div>
+    <div id="fb"></div>
+    <div class="row"><button class="btn soft grow" id="bHint">Подсказка</button><button class="btn soft grow" id="bDont">Не знаю</button></div>
+    <button class="btn block" id="check">Проверить</button></div>${stopBtn}`;
 }
 function bindRun(v){
-  const s=S.study,c=s.queue[s.i];
+  const s=S.study,c=s.queue[s.i],m=curMode();
   $('#quit').onclick=()=>{S.study={phase:'setup'};viewStudy()};
-  $('#bStop').onclick=async()=>{await toggleStop(c.id);if(c.stop)s.stopped.push(c.id);next(true)};
-  if(S.mode==='classic')bindClassic(c);
-  else if(S.mode==='choice')bindChoice(c);
+  $('#bStop').onclick=async()=>{const prev=c.stop;await toggleStop(c.id);s.hist.push({type:'stop',id:c.id,prev});if(c.stop)s.stopped.push(c.id);next()};
+  $('#bEdit').onclick=(e)=>{e.stopPropagation();editInStudy()};
+  const bk=$('#bBack');if(bk)bk.onclick=goBack;
+  if(m==='classic')bindClassic(c);
+  else if(m==='choice')bindChoice(c);
   else bindWrite(c);
 }
-async function mark(c,res){
-  await logEvent(c.id,res);(res==='ok'?S.study.ok:S.study.bad).push(c.id);
-  if(res==='ok'&&!S.setup.stopOnly){const a=S.cycle[S.mode]||(S.cycle[S.mode]=[]);if(!a.includes(c.id)){a.push(c.id);saveCycle()}}
+/* правка карточки прямо во время обучения */
+function editInStudy(){
+  const s=S.study,c=s.queue[s.i];
+  S.afterEdit=()=>{
+    if(!byId(S.cards,c.id)){s.queue.splice(s.i,1);s.options=null;s.answered=false;s.hint=0;
+      if(s.i>=s.queue.length){finishRound();return}viewStudy();return}
+    if(s.answered)next();else viewStudy();
+  };
+  editCard(c.id);
 }
-function next(skipLog){
-  const s=S.study;s.i++;s.options=null;s.answered=false;
-  if(s.i>=s.queue.length)s.phase='done';
+async function mark(c,res){
+  const s=S.study,ev=await logEvent(c.id,res);(res==='ok'?s.ok:s.bad).push(c.id);
+  const h={type:'mark',id:c.id,res,evId:ev.id,cycleKey:null,daily:false};
+  if(res==='ok'){
+    const key=s.chain?(s.chain.stage===2?'chain':null):S.mode;
+    if(key&&!s.daily&&!stopMode()){const a=S.cycle[key]||(S.cycle[key]=[]);if(!a.includes(c.id)){a.push(c.id);h.cycleKey=key;saveCycle()}}
+    if(s.daily&&(!s.chain||s.chain.stage===2)&&S.daily&&!S.daily.done.includes(c.id)){S.daily.done.push(c.id);h.daily=true;saveDaily()}
+  }
+  s.hist.push(h);
+}
+/* вернуться к предыдущей карточке и отменить её отметку */
+async function goBack(){
+  const s=S.study,h=s.hist.pop();if(!h||s.i<=0)return;
+  if(h.type==='mark'){
+    S.events=S.events.filter(e=>e.id!==h.evId);await dbDel('events',h.evId);
+    const arr=h.res==='ok'?s.ok:s.bad;const k=arr.lastIndexOf(h.id);if(k>=0)arr.splice(k,1);
+    if(h.cycleKey){S.cycle[h.cycleKey]=(S.cycle[h.cycleKey]||[]).filter(x=>x!==h.id);saveCycle()}
+    if(h.daily&&S.daily){S.daily.done=S.daily.done.filter(x=>x!==h.id);saveDaily()}
+  }else{
+    const c=byId(S.cards,h.id);if(c){c.stop=h.prev;await dbPut('cards',c)}
+    s.stopped=s.stopped.filter(x=>x!==h.id);
+  }
+  s.i--;s.options=null;s.answered=false;s.hint=0;viewStudy();
+}
+function next(){
+  const s=S.study;s.i++;s.options=null;s.answered=false;s.hint=0;
+  if(s.i>=s.queue.length)finishRound();else viewStudy();
+}
+function resetQueue(list){
+  const s=S.study;s.queue=S.setup.shuffle?shuffle(list):list.slice();s.i=0;s.ok=[];s.bad=[];s.hist=[];s.options=null;s.answered=false;s.hint=0;
+}
+function finishRound(){
+  const s=S.study;
+  if(!s.chain){s.phase='done';viewStudy();return}
+  const ch=s.chain,alive=(c)=>{const x=byId(S.cards,c.id);return x&&(stopMode()||!x.stop)};
+  ch.batch=ch.batch.filter(alive);
+  const bad=new Set(s.bad),seen=new Set();
+  const pending=s.queue.filter(c=>bad.has(c.id)&&alive(c)&&!seen.has(c.id)&&seen.add(c.id));
+  if(pending.length){ch.round++;resetQueue(pending);toast(`Ещё раз: недоученные (${pending.length})`)}
+  else{
+    ch.stage++;ch.round=1;
+    if(ch.stage>2||!ch.batch.length){s.phase='done';viewStudy();return}
+    resetQueue(ch.batch);toast(`Этап ${ch.stage+1} из 3: ${MODES[STAGES[ch.stage]]}`);
+  }
   viewStudy();
 }
 /* классика */
@@ -732,7 +873,7 @@ function bindClassic(c){
     dw.style.transition='transform .28s,opacity .28s';dw.style.transform=`translateX(${dir*140}%) rotate(${dir*18}deg)`;dw.style.opacity='0';
     await mark(c,dir>0?'ok':'bad');setTimeout(()=>next(),230);
   };
-  stage.addEventListener('pointerdown',e=>{x0=e.clientX;dx=0;dw.style.transition='none';stage.setPointerCapture(e.pointerId)});
+  stage.addEventListener('pointerdown',e=>{if(e.target.closest('.pencil'))return;x0=e.clientX;dx=0;dw.style.transition='none';stage.setPointerCapture(e.pointerId)});
   stage.addEventListener('pointermove',e=>{if(x0===null)return;dx=e.clientX-x0;
     dw.style.transform=`translateX(${dx}px) rotate(${dx/18}deg)`;
     const k=Math.min(1,Math.abs(dx)/100);br.style.opacity=dx>0?k:0;bl.style.opacity=dx<0?k:0});
@@ -751,23 +892,42 @@ function bindChoice(c){
     const picked=s.options[+b.dataset.o],good=picked.id===c.id||norm(answerOf(picked))===norm(answerOf(c));
     $('#opts').querySelectorAll('.opt').forEach((el,n)=>{const o=s.options[n];
       if(o.id===c.id||norm(answerOf(o))===norm(answerOf(c)))el.classList.add('right');else if(el===b)el.classList.add('wrong')});
-    await mark(c,good?'ok':'bad');
     $('#fb').innerHTML=`<div class="feedback ${good?'ok':'bad'}">${good?'✓ Верно':'✗ Неверно. Правильно: '+esc(answerOf(c))}</div><button class="btn block" id="nx" style="margin-top:10px">Дальше</button>`;
     $('#nx').onclick=()=>next();$('#nx').focus();
+    await mark(c,good?'ok':'bad');
   });
 }
-/* письмо */
+/* письмо: подсказка раскрывает до двух знаков, «не знаю» сразу показывает ответ */
 const variants=variantKeys;
 function bindWrite(c){
   const s=S.study,inp=$('#ans');setTimeout(()=>inp.focus(),50);
+  const chars=Array.from(splitVariants(answerOf(c))[0]||answerOf(c));
+  const maxHint=Math.min(2,chars.length-1);
+  const showHint=()=>{const k=s.hint||0;const b=$('#hintBox');
+    if(k>0){b.hidden=false;b.textContent=chars.map((ch,i)=>i<k?ch:(ch===' '?' ':'＿')).join('')}
+    $('#bHint').textContent=maxHint>0?`Подсказка (${k}/${maxHint})`:'Подсказка'};
+  showHint();
+  $('#bHint').onclick=()=>{
+    if(s.answered)return;
+    if(maxHint<1){toast('Слово слишком короткое для подсказки');return}
+    if((s.hint||0)>=maxHint){toast('Больше подсказок нет');return}
+    s.hint=(s.hint||0)+1;showHint();inp.focus();
+  };
+  const lock=()=>{inp.disabled=true;$('#bHint').disabled=true;$('#bDont').disabled=true;$('#bHint').style.opacity=.45;$('#bDont').style.opacity=.45};
+  $('#bDont').onclick=async()=>{
+    if(s.answered)return;s.answered=true;lock();
+    $('#fb').innerHTML=`<div class="feedback bad">✗ Правильно: ${esc(answerOf(c))}</div>`;
+    const b=$('#check');b.textContent='Дальше';b.focus();
+    await mark(c,'bad');
+  };
   const go=async()=>{
     if(s.answered){next();return}
-    const val=norm(inp.value);if(!val){toast('Введите ответ');return}
-    s.answered=true;inp.disabled=true;
+    const val=norm(inp.value);if(!val){toast('Введите ответ или нажмите «Не знаю»');return}
+    s.answered=true;lock();
     const good=val===norm(answerOf(c))||variants(answerOf(c)).includes(val);
-    await mark(c,good?'ok':'bad');
     $('#fb').innerHTML=`<div class="feedback ${good?'ok':'bad'}">${good?'✓ Верно':'✗ Неверно. Правильно: '+esc(answerOf(c))}</div>`;
     const b=$('#check');b.textContent='Дальше';b.focus();
+    await mark(c,good?'ok':'bad');
   };
   $('#check').onclick=go;
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!isIME(e)){e.preventDefault();go()}});
@@ -776,20 +936,106 @@ function bindWrite(c){
 }
 /* итог */
 function doneHtml(){
-  const s=S.study;
+  const s=S.study,ch=s.chain;
+  const tail=s.daily?(()=>{const d=S.daily,left=d.ids.filter(id=>!d.done.includes(id)&&byId(S.cards,id)&&!byId(S.cards,id).stop).length;
+      return `<div class="sub" style="text-align:center">Карточки дня: осталось ${left} из ${d.ids.length}.</div>`})()
+    :(stopMode()?'':(()=>{const c=cycleStats();return `<div class="sub" style="text-align:center">Круг (${MODES[S.mode]}): пройдено ${c.done} из ${c.total}, осталось ${c.left}.</div>`})());
+  if(ch)return `<h2>Все три этапа пройдены</h2><div class="kpi" style="margin-bottom:16px">
+    <div class="card"><b class="num" style="color:var(--ok)">✓ ${ch.batch.length}</b><span>слов выучено</span></div>
+    <div class="card"><b class="num" style="color:var(--stop)">○ ${s.stopped.length}</b><span>в стоп-лист</span></div>
+    <div class="card"><b class="num">3</b><span>этапа</span></div></div>${tail}
+    <div class="stack"><button class="btn soft block" id="back">Назад к выбору</button></div>`;
   return `<h2>Готово</h2><div class="kpi" style="margin-bottom:16px">
     <div class="card"><b class="num" style="color:var(--ok)">✓ ${s.ok.length}</b><span>выучено</span></div>
     <div class="card"><b class="num" style="color:var(--bad)">✗ ${s.bad.length}</b><span>недоучено</span></div>
-    <div class="card"><b class="num" style="color:var(--stop)">○ ${s.stopped.length}</b><span>в стоп-лист</span></div></div>
-    ${S.setup.stopOnly?'':(()=>{const c=cycleStats();return `<div class="sub" style="text-align:center">Круг (${MODES[S.mode]}): пройдено ${c.done} из ${c.total}, осталось ${c.left}.</div>`})()}
-    <div class="stack">${s.bad.length?'<button class="btn block" id="again">Повторить недоученные</button>':''}<button class="btn soft block" id="back">К выбору категорий</button></div>`;
+    <div class="card"><b class="num" style="color:var(--stop)">○ ${s.stopped.length}</b><span>в стоп-лист</span></div></div>${tail}
+    <div class="stack">${s.bad.length?'<button class="btn block" id="again">Повторить недоученные</button>':''}<button class="btn soft block" id="back">Назад к выбору</button></div>`;
 }
 function bindDone(v){
   const s=S.study;
   const a=v.querySelector('#again');
-  if(a)a.onclick=()=>{const ids=[...new Set(s.bad)];const q=ids.map(id=>byId(S.cards,id)).filter(c=>c&&(S.setup.stopOnly||!c.stop));
-    S.study={phase:'run',queue:S.setup.shuffle?shuffle(q):q,i:0,ok:[],bad:[],stopped:[],answered:false};viewStudy()};
+  if(a)a.onclick=()=>{const ids=[...new Set(s.bad)];const q=ids.map(id=>byId(S.cards,id)).filter(c=>c&&(stopMode()||!c.stop));
+    S.study={...s,phase:'run',queue:S.setup.shuffle?shuffle(q):q,i:0,ok:[],bad:[],stopped:[],answered:false,hist:[],hint:0,options:null};viewStudy()};
   v.querySelector('#back').onclick=()=>{S.study={phase:'setup'};viewStudy()};
+}
+
+/* ---------- Карточки дня ---------- */
+const DAILY_RANDOM=30,DAILY_HARD=10;
+const saveDaily=()=>dbPut('meta',{k:'daily',...S.daily}).catch(()=>{});
+function buildDaily(force){
+  const t=dayKey(Date.now());
+  if(!force&&S.daily&&S.daily.date===t){S.daily.ids=S.daily.ids.filter(id=>byId(S.cards,id));S.daily.hard=(S.daily.hard||[]).filter(id=>S.daily.ids.includes(id));return S.daily}
+  const st=cardStats(),live=S.cards.filter(c=>!c.stop);
+  /* трудные: чаще всего «не знаю»/ошибки, плюс последний ответ неверный, минус верные ответы */
+  const hard=live.map(c=>{const x=st.get(c.id)||{ok:0,bad:0,last:null};return {c,bad:x.bad,score:x.bad*2+(x.last==='bad'?3:0)-x.ok*0.5}})
+    .filter(x=>x.bad>0&&x.score>0).sort((a,b)=>b.score-a.score).slice(0,DAILY_HARD);
+  const hardIds=new Set(hard.map(x=>x.c.id));
+  const rnd=shuffle(live.filter(c=>!hardIds.has(c.id))).slice(0,DAILY_RANDOM);
+  S.daily={date:t,ids:[...hard.map(x=>x.c.id),...rnd.map(c=>c.id)],hard:hard.map(x=>x.c.id),done:[]};
+  saveDaily();return S.daily;
+}
+function dailyRemaining(d){return d.ids.filter(id=>!d.done.includes(id)).map(id=>byId(S.cards,id)).filter(c=>c&&!c.stop)}
+function dailySetupHtml(){
+  const d=buildDaily(),rem=dailyRemaining(d),T=S.setup;
+  const how=[['chain','Все три подряд'],['classic','Классика'],['choice','Варианты'],['write','Письмо']];
+  return `<h2>Карточки дня</h2>
+    <div class="sub">Каждый день набор собирается заново: ${DAILY_RANDOM} случайных слов и до ${DAILY_HARD} самых трудных, на которых вы чаще всего ошибались или нажимали «не знаю». Это своего рода интервальное повторение.</div>
+    <div class="card"><div class="kpi" style="margin-bottom:0"><div style="text-align:center"><b class="num" style="font-family:var(--font-display);font-size:26px">${d.ids.length}</b><br><span style="font-size:12px;color:var(--muted);font-weight:700">в наборе</span></div>
+      <div style="text-align:center"><b class="num" style="font-family:var(--font-display);font-size:26px;color:var(--bad)">${(d.hard||[]).length}</b><br><span style="font-size:12px;color:var(--muted);font-weight:700">трудных</span></div>
+      <div style="text-align:center"><b class="num" style="font-family:var(--font-display);font-size:26px;color:var(--ok)">${d.done.length}</b><br><span style="font-size:12px;color:var(--muted);font-weight:700">пройдено</span></div></div></div>
+    <h2 style="margin-top:20px">Как проходить</h2>
+    <div class="row wrap">${how.map(([k,n])=>`<button class="chip" data-how="${k}" aria-pressed="${S.dailyHow===k}">${n}</button>`).join('')}</div>
+    <h2 style="margin-top:20px">Показывать сторону</h2>
+    <div class="row wrap"><button class="chip" data-side="front" aria-pressed="${T.side==='front'}">${esc(S.meta.frontLang)} → русский</button>
+      <button class="chip" data-side="back" aria-pressed="${T.side==='back'}">Русский → ${esc(S.meta.frontLang)}</button></div>
+    <label class="check" style="margin-top:14px"><input type="checkbox" id="shuf" ${T.shuffle?'checked':''}><span class="grow">Перемешать карточки</span></label>
+    <div id="setupMsg" class="sub" style="margin:12px 0 0">${rem.length?`Осталось пройти сегодня: ${rem.length}.`:'На сегодня всё пройдено. Можно собрать новый набор.'}</div>
+    <div class="stack" style="margin-top:10px"><button class="btn block" id="go" ${rem.length?'':'disabled'}>Начать</button>
+      <button class="btn soft block" id="reroll">Собрать набор заново</button></div>`;
+}
+function bindDaily(v){
+  const T=S.setup;
+  v.querySelectorAll('[data-how]').forEach(b=>b.onclick=()=>{S.dailyHow=b.dataset.how;viewStudy()});
+  v.querySelectorAll('[data-side]').forEach(b=>b.onclick=()=>{T.side=b.dataset.side;viewStudy()});
+  v.querySelector('#shuf').onchange=(e)=>T.shuffle=e.target.checked;
+  v.querySelector('#go').onclick=startSession;
+  v.querySelector('#reroll').onclick=()=>{buildDaily(true);toast('Набор собран заново');viewStudy()};
+}
+function startDaily(){
+  const d=buildDaily(),rem=dailyRemaining(d),how=S.dailyHow||'chain';
+  if(!rem.length){toast('На сегодня всё пройдено');return}
+  if((how==='choice'||how==='chain')&&uniqueAnswers(S.cards).length<2){$('#setupMsg').textContent='Для этого режима нужно хотя бы две разные карточки в пуле.';return}
+  const q=S.setup.shuffle?shuffle(rem):rem;
+  S.study={phase:'run',queue:q,i:0,ok:[],bad:[],stopped:[],answered:false,hist:[],hint:0,daily:true,
+    single:how==='chain'?null:how,chain:how==='chain'?{stage:0,round:1,batch:q.slice(),total:q.length}:null};
+  viewStudy();
+}
+/* ---------- Серия занятий ---------- */
+function streakInfo(){
+  const days=new Set(S.events.map(e=>dayKey(e.t)));
+  const base=new Date();base.setHours(12,0,0,0);
+  const key=(off)=>dayKey(base.getTime()-off*864e5);
+  const doneToday=days.has(key(0));
+  let cur=0,off=doneToday?0:1;
+  while(days.has(key(off))){cur++;off++}
+  const sorted=[...days].sort();let best=0,run=0,prev=null;
+  for(const k of sorted){
+    if(prev){const diff=Math.round((new Date(k+'T12:00:00')-new Date(prev+'T12:00:00'))/864e5);run=diff===1?run+1:1}else run=1;
+    best=Math.max(best,run);prev=k;
+  }
+  return {cur,best,doneToday};
+}
+const flameSvg=(on,size)=>`<svg viewBox="0 0 24 24" width="${size}" height="${size}" aria-hidden="true"><path d="M12 1.8c1.2 3.6 5 5.7 5 10.4a5 5 0 0 1-10 0c0-1.9.7-3.2 1.7-4.3.2 1.4 1 2.2 1.8 2.4C10.2 7.3 10.6 4.5 12 1.8z" fill="${on?'url(#flameGrad)':'var(--line)'}"/></svg>`;
+function streakHtml(){
+  const {cur,best,doneToday}=streakInfo(),MAX=28;
+  const flames=cur?Array.from({length:Math.min(cur,MAX)},()=>flameSvg(true,28)).join('')+(cur>MAX?`<span class="num" style="font-weight:800;color:var(--stop);align-self:center">+${cur-MAX}</span>`:''):flameSvg(false,34);
+  const msg=!cur?'Позанимайтесь сегодня, чтобы начать серию.':doneToday?'Сегодня занятие уже засчитано.':'Позанимайтесь сегодня, чтобы не потерять серию.';
+  return `<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="flameGrad" x1="0" y1="1" x2="0" y2="0"><stop offset="0" style="stop-color:var(--stop)"/><stop offset="1" stop-color="#ffd166"/></linearGradient></defs></svg>
+    <div class="card" style="margin-bottom:16px"><div class="row" style="align-items:flex-end"><div class="grow"><b class="num" style="font-family:var(--font-display);font-size:40px;line-height:1">${cur}</b>
+      <span style="font-weight:800;color:var(--muted)"> ${cur%10===1&&cur%100!==11?'день':(cur%10>=2&&cur%10<=4&&(cur%100<10||cur%100>=20))?'дня':'дней'} подряд</span></div>
+      <span class="pill neutral">рекорд: <span class="num">${best}</span></span></div>
+      <div style="display:flex;flex-wrap:wrap;gap:2px;margin:10px 0 6px">${flames}</div>
+      <div class="sub" style="margin:0">${msg}</div></div>`;
 }
 /* ---------- Вкладка: статистика ---------- */
 function viewStats(){
@@ -806,7 +1052,7 @@ function viewStats(){
   const maxBad=Math.max(1,...forgot.map(r=>r.bad)),maxOk=Math.max(1,...perfect.map(r=>r.ok));
   const line=(r,val,max,color,mark)=>`<div class="item"><div class="w"><b>${esc(r.c.front)}</b><span>${esc(r.c.back)}</span>
     <div class="bar-row" style="margin-top:6px"><div class="bar-track"><i style="width:${Math.max(6,val/max*100)}%;background:${color}"></i></div><span class="num" style="font-weight:800;color:${color}">${mark} ${val}</span></div></div></div>`;
-  v.innerHTML=`<div class="kpi">
+  v.innerHTML=streakHtml()+`<div class="kpi">
       <div class="card"><b class="num" style="color:var(--ok)">${(learnedByDay.get(today)||new Set()).size}</b><span>выучено сегодня</span></div>
       <div class="card"><b class="num">${answersByDay.get(today)||0}</b><span>ответов сегодня</span></div>
       <div class="card"><b class="num" style="color:var(--stop)">${S.cards.filter(c=>c.stop).length}</b><span>в стоп-листе</span></div></div>
@@ -851,7 +1097,9 @@ async function init(){
     const metaAll=await dbAll('meta');
     const m=metaAll.find(x=>x.k==='meta');if(m){const{k,...rest}=m;S.meta={...S.meta,...rest}}
     const dr=metaAll.find(x=>x.k==='drafts');if(dr){const{k,...rest}=dr;S.drafts=rest}
-    const cy=metaAll.find(x=>x.k==='cycle');if(cy){const{k,...rest}=cy;S.cycle={classic:[],choice:[],write:[],...rest}}
+    const cy=metaAll.find(x=>x.k==='cycle');if(cy){const{k,...rest}=cy;S.cycle={classic:[],choice:[],write:[],chain:[],...rest}}
+    const dl=metaAll.find(x=>x.k==='daily');if(dl){const{k,...rest}=dl;S.daily=rest}
+    const fo=metaAll.find(x=>x.k==='folders');if(fo&&Array.isArray(fo.list))S.folders=fo.list
     if(typeof S.meta.count==='number')S.setup.count=S.meta.count;
     if(!S.meta.seeded&&!S.cards.length){
       /* примеры при первом запуске; их можно удалить */
