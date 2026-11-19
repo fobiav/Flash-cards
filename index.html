@@ -372,7 +372,7 @@ function cardItem(c,s){
     <button class="mark stop" data-stop="${c.id}" aria-label="${c.stop?'Достать из стоп-листа':'В стоп-лист'}" title="${c.stop?'Достать из стоп-листа':'В стоп-лист'}" style="${c.stop?'':'opacity:.45'}">○</button></div>`;
 }
 async function toggleStop(id){
-  const c=byId(S.cards,id);if(!c)return;c.stop=!c.stop;await dbPut('cards',c);
+  const c=byId(S.cards,id);if(!c)return;c.stop=!c.stop;c.u=Date.now();await dbPut('cards',c);
   toast(c.stop?'Отправлено в стоп-лист':'Возвращено в обучение');
   if(S.tab==='cards')drawCardList();
 }
@@ -409,8 +409,8 @@ function editCard(id){
       const front=F.value.trim(),back=B.value.trim();
       if(!front||!back){toast('Заполните обе стороны');return}
       let card=c;
-      if(!card){card={id:uid(),front,back,created:Date.now(),stop:false};S.cards.push(card)}
-      else{card.front=front;card.back=back}
+      if(!card){card={id:uid(),front,back,created:Date.now(),stop:false,u:Date.now()};S.cards.push(card)}
+      else{card.front=front;card.back=back;card.u=Date.now()}
       await dbPut('cards',card);
       const sel=chosen(),touched=[];
       for(const k of S.cats){
@@ -514,7 +514,7 @@ function editMany(){
       for(const r of filled){
         const keys=variantKeys(r.f);
         if(keys.some(k=>seen.has(k))){skipped++;continue}
-        const card={id:uid(),front:r.f.trim(),back:r.b.trim(),created:t+created.length,stop:false};
+        const card={id:uid(),front:r.f.trim(),back:r.b.trim(),created:t+created.length,stop:false,u:t};
         keys.forEach(k=>seen.set(k,card));created.push(card);
         for(const cid of (r.cats||def)){if(!byCat.has(cid))byCat.set(cid,[]);byCat.get(cid).push(card.id)}
       }
@@ -610,36 +610,127 @@ function editCat(id,defFolder){
   },`<div class="row"><button class="btn grow" id="cSave">Сохранить</button>${k?'<button class="btn danger" id="cDel">Удалить</button>':''}</div>`);
 }
 
-/* ---------- Резервная копия и настройки ---------- */
+/* ---------- Резервная копия в файле и перенос между устройствами ---------- */
+const fmtDate=(iso)=>{try{return new Date(iso).toLocaleString('ru-RU',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
+function buildBackup(){
+  return {app:'kartochki',v:2,exported:new Date().toISOString(),cards:S.cards,cats:S.cats,folders:S.folders,events:S.events,cycle:S.cycle,
+    meta:{frontLang:S.meta.frontLang,count:S.meta.count}};
+}
+const backupName=()=>`kartochki-kopiya-${dayKey(Date.now())}.json`;
+function backupFile(){
+  const json=JSON.stringify(buildBackup());
+  return {json,blob:new Blob([json],{type:'application/json'}),name:backupName()};
+}
+async function markBackup(){S.meta.lastBackup=new Date().toISOString();await dbPut('meta',{k:'meta',...S.meta}).catch(()=>{})}
+function downloadBackup(){
+  const {blob,name}=backupFile();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;a.style.display='none';
+  document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),15000);
+  markBackup();
+  toast(`Файл сохраняется: ${S.cards.length} карточек, ${Math.max(1,Math.round(blob.size/1024))} КБ`);
+}
+
+/* объединение: ничего не стирает, новые карточки добавляются, одинаковые не дублируются */
+async function mergeData(d){
+  const key=(c)=>norm(c.front)+'\u0001'+norm(c.back);
+  const cardById=new Map(S.cards.map(c=>[c.id,c])),cardByKey=new Map(S.cards.map(c=>[key(c),c]));
+  const idMap=new Map(),newCards=[],changed=new Set();let updated=0;
+  for(const ic of d.cards){
+    if(!ic||!ic.id||typeof ic.front!=='string'||typeof ic.back!=='string')continue;
+    let lc=cardById.get(ic.id)||cardByKey.get(key(ic));
+    if(lc){idMap.set(ic.id,lc.id);
+      if((ic.u||0)>(lc.u||0)){lc.front=ic.front;lc.back=ic.back;lc.stop=!!ic.stop;lc.u=ic.u;changed.add(lc);updated++}}
+    else{const nc={id:ic.id,front:ic.front,back:ic.back,created:ic.created||Date.now(),stop:!!ic.stop};if(ic.u)nc.u=ic.u;
+      S.cards.push(nc);newCards.push(nc);cardById.set(nc.id,nc);cardByKey.set(key(nc),nc);idMap.set(ic.id,nc.id)}
+  }
+  /* папки и категории */
+  const fmap=new Map();let newFolders=0;
+  const fByName=new Map(S.folders.map(f=>[norm(f.name),f]));
+  for(const f of (d.folders||[])){if(!f||!f.id||!f.name)continue;
+    let lf=byId(S.folders,f.id)||fByName.get(norm(f.name));
+    if(!lf){lf={id:f.id,name:f.name};S.folders.push(lf);fByName.set(norm(lf.name),lf);newFolders++}
+    fmap.set(f.id,lf.id)}
+  const catTouched=new Set();let newCats=0;
+  const catByName=new Map(S.cats.map(k=>[norm(k.name),k]));
+  for(const ik of (d.cats||[])){if(!ik||!ik.id||!ik.name)continue;
+    let lk=byId(S.cats,ik.id)||catByName.get(norm(ik.name));
+    if(!lk){lk={id:ik.id,name:ik.name,cardIds:[]};S.cats.push(lk);catByName.set(norm(lk.name),lk);newCats++;catTouched.add(lk)}
+    if(!lk.folderId&&ik.folderId&&fmap.has(ik.folderId)){lk.folderId=fmap.get(ik.folderId);catTouched.add(lk)}
+    const have=new Set(lk.cardIds);
+    for(const i of (ik.cardIds||[])){const m=idMap.get(i);if(m&&!have.has(m)){lk.cardIds.push(m);have.add(m);catTouched.add(lk)}}
+  }
+  /* история ответов */
+  const haveEv=new Set(S.events.map(e=>e.id)),newEv=[];
+  for(const e of (d.events||[])){if(!e||!e.id||haveEv.has(e.id))continue;
+    const ne={...e,c:idMap.get(e.c)||e.c};S.events.push(ne);newEv.push(ne);haveEv.add(e.id)}
+  /* круги */
+  if(d.cycle&&typeof d.cycle==='object'){for(const k of Object.keys(d.cycle)){if(!Array.isArray(d.cycle[k]))continue;
+    const cur=new Set(S.cycle[k]||[]);d.cycle[k].forEach(i=>cur.add(idMap.get(i)||i));S.cycle[k]=[...cur]}}
+  if(d.meta&&d.meta.frontLang&&S.meta.frontLang==='Иностранный')S.meta.frontLang=d.meta.frontLang;
+  await dbPutMany('cards',[...newCards,...changed]);
+  if(catTouched.size)await dbPutMany('cats',[...catTouched]);
+  if(newEv.length)await dbPutMany('events',newEv);
+  await saveFolders();await saveCycle();await dbPut('meta',{k:'meta',...S.meta});
+  return {added:newCards.length,updated,cats:newCats,folders:newFolders,events:newEv.length};
+}
+/* замена: на устройстве остаётся ровно то, что в файле */
+async function replaceData(d){
+  await dbClear('cards');await dbClear('cats');await dbClear('events');
+  await dbPutMany('cards',d.cards);await dbPutMany('cats',d.cats||[]);await dbPutMany('events',d.events||[]);
+  S.cards=d.cards;S.cats=d.cats||[];S.events=d.events||[];S.folders=Array.isArray(d.folders)?d.folders:[];await saveFolders();
+  S.cycle={classic:[],choice:[],write:[],chain:[],...(d.cycle||{})};await saveCycle();
+  if(d.meta){S.meta={...S.meta,frontLang:d.meta.frontLang||S.meta.frontLang};if(typeof d.meta.count==='number'){S.meta.count=d.meta.count;S.setup.count=d.meta.count}}
+  await dbPut('meta',{k:'meta',...S.meta});
+}
+async function readBackupFile(f){
+  let d;
+  try{d=JSON.parse(await f.text())}catch(e){toast('Не удалось прочитать файл: это не копия приложения');return}
+  if(!d||!Array.isArray(d.cards)){toast('В этом файле нет карточек');return}
+  openImportPreview(d,f.name);
+}
+function openImportPreview(d,fname){
+  const n=(a)=>Array.isArray(a)?a.length:0;
+  openSheet(`<h2>Копия из файла</h2>
+    <div class="card"><div style="font-weight:800;overflow-wrap:anywhere">${esc(fname||'файл')}</div>
+      <div class="sub" style="margin:4px 0 0">${d.exported?'Создана: '+esc(fmtDate(d.exported))+'. ':''}Карточек: <b class="num">${n(d.cards)}</b>, категорий: <b class="num">${n(d.cats)}</b>, папок: <b class="num">${n(d.folders)}</b>, ответов в статистике: <b class="num">${n(d.events)}</b>.</div>
+      <div class="sub" style="margin:4px 0 0">Сейчас на этом устройстве: карточек <b class="num">${S.cards.length}</b>, категорий <b class="num">${S.cats.length}</b>.</div></div>
+    <div class="stack" style="margin-top:14px">
+      <div class="card"><b>Объединить</b><div class="sub" style="margin:4px 0 10px">Ничего не удаляется. Новые карточки, категории и ответы из файла добавятся, одинаковые карточки не задвоятся. Подходит для переноса между телефоном и компьютером.</div>
+        <button class="btn block" id="iMerge">Объединить</button></div>
+      <div class="card"><b>Заменить всё</b><div class="sub" style="margin:4px 0 10px">Всё, что есть на этом устройстве, будет стёрто и заменено содержимым файла. Подходит для нового, пустого устройства или восстановления после сбоя.</div>
+        <button class="btn danger block" id="iReplace">Заменить всё</button></div>
+    </div>`,()=>{
+    $('#iMerge').onclick=async()=>{const b=$('#iMerge');b.disabled=true;b.textContent='Объединяю…';
+      try{const r=await mergeData(d);closeSheet();render();
+        toast(`Добавлено карточек: ${r.added}`+(r.updated?`, обновлено: ${r.updated}`:'')+(r.cats?`, категорий: ${r.cats}`:''))}
+      catch(e){console.warn(e);b.disabled=false;b.textContent='Объединить';toast('Не получилось объединить, данные не изменены')}};
+    const rp=$('#iReplace');
+    rp.onclick=()=>{rp.textContent='Точно заменить всё?';rp.onclick=async()=>{rp.disabled=true;rp.textContent='Заменяю…';
+      try{await replaceData(d);applyTheme();closeSheet();render();toast('Данные заменены')}
+      catch(e){console.warn(e);rp.disabled=false;rp.textContent='Заменить всё';toast('Не получилось заменить')}}};
+  });
+}
+
 function openMenu(){
+  const last=S.meta.lastBackup?`Последняя копия: ${esc(fmtDate(S.meta.lastBackup))}.`:'Копию вы ещё не сохраняли.';
   openSheet(`<h2>Данные</h2><div class="stack">
     <div><label class="f" for="mLang">Название языка на лицевой стороне</label><input type="text" id="mLang" value="${esc(S.meta.frontLang)}"></div>
-    <div class="sub" style="margin:0">Данные хранятся в этом браузере без ограничений по числу карточек. Чтобы не потерять их при очистке браузера или перенести на другое устройство, сохраните резервную копию.</div>
-    <button class="btn block" id="mExport">Показать копию для сохранения</button>
-    <textarea id="mText" rows="6" placeholder="Сюда можно вставить копию, чтобы восстановить данные" style="display:none"></textarea>
-    <button class="btn soft block" id="mImport">Восстановить из копии</button>
-    <button class="btn soft block" id="mFile">Загрузить копию из файла</button><input type="file" id="mFileIn" accept=".json,application/json" hidden>
+    <div class="card"><b>Копия в файле</b>
+      <div class="sub" style="margin:4px 0 10px">Файл содержит все карточки, категории, папки и статистику. Сохраните его и откройте на другом устройстве, чтобы перенести данные. Заодно это резервная копия на случай очистки браузера. ${last}</div>
+      <div class="stack"><button class="btn block" id="mExport">Сохранить копию в файл</button>
+        <button class="btn soft block" id="mShare" hidden>Отправить файл…</button>
+        <button class="btn soft block" id="mFile">Загрузить копию из файла</button></div>
+      <input type="file" id="mFileIn" accept=".json,application/json,text/plain" hidden></div>
+    <div class="sub" style="margin:0">Карточки хранятся в браузере этого устройства. Количество карточек не ограничено.</div>
     <button class="btn block" id="mSaveLang">Готово</button></div>`,()=>{
     $('#mSaveLang').onclick=async()=>{S.meta.frontLang=$('#mLang').value.trim()||'Иностранный';await dbPut('meta',{k:'meta',...S.meta});closeSheet();render()};
-    $('#mExport').onclick=()=>{
-      const t=$('#mText');t.style.display='block';
-      t.value=JSON.stringify({v:1,cards:S.cards,cats:S.cats,events:S.events,meta:S.meta,cycle:S.cycle,folders:S.folders});t.select();
-      try{navigator.clipboard.writeText(t.value).then(()=>toast('Скопировано'),()=>toast('Выделено. Скопируйте вручную'))}catch(e){toast('Выделено. Скопируйте вручную')}
-    };
-    const doImport=async(text)=>{
-      try{const d=JSON.parse(text);if(!Array.isArray(d.cards))throw 0;
-        await dbClear('cards');await dbClear('cats');await dbClear('events');
-        await dbPutMany('cards',d.cards);await dbPutMany('cats',d.cats||[]);await dbPutMany('events',d.events||[]);
-        S.cards=d.cards;S.cats=d.cats||[];S.events=d.events||[];
-        if(Array.isArray(d.folders)){S.folders=d.folders;await saveFolders()}
-        if(d.cycle){S.cycle={classic:[],choice:[],write:[],chain:[],...d.cycle};await dbPut('meta',{k:'cycle',...S.cycle})}
-        if(d.meta){S.meta={...S.meta,...d.meta};await dbPut('meta',{k:'meta',...S.meta})}
-        applyTheme();closeSheet();toast('Данные восстановлены');render();
-      }catch(e){toast('Не удалось прочитать копию')}
-    };
-    $('#mImport').onclick=()=>{const t=$('#mText');if(t.style.display==='none'){t.style.display='block';t.focus();toast('Вставьте копию и нажмите ещё раз');return}doImport(t.value)};
+    $('#mExport').onclick=()=>{downloadBackup();setTimeout(()=>{if($('#sheetBg'))openMenu()},400)};
     $('#mFile').onclick=()=>$('#mFileIn').click();
-    $('#mFileIn').onchange=(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>doImport(r.result);r.readAsText(f)};
+    $('#mFileIn').onchange=(e)=>{const f=e.target.files[0];e.target.value='';if(f)readBackupFile(f)};
+    /* «Отправить файл…» появляется только там, где браузер умеет делиться файлами (обычно на телефоне) */
+    try{const {blob,name}=backupFile(),file=new File([blob],name,{type:'application/json'});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){const b=$('#mShare');b.hidden=false;
+        b.onclick=async()=>{try{const f2=backupFile();await navigator.share({files:[new File([f2.blob],f2.name,{type:'application/json'})],title:'Копия карточек'});markBackup()}catch(e){if(e&&e.name!=='AbortError')toast('Не удалось отправить, сохраните файл кнопкой выше')}}}}catch(e){}
   });
 }
 /* ---------- Вкладка: учить ---------- */
@@ -837,7 +928,7 @@ async function goBack(){
     if(h.cycleKey){S.cycle[h.cycleKey]=(S.cycle[h.cycleKey]||[]).filter(x=>x!==h.id);saveCycle()}
     if(h.daily&&S.daily){S.daily.done=S.daily.done.filter(x=>x!==h.id);saveDaily()}
   }else{
-    const c=byId(S.cards,h.id);if(c){c.stop=h.prev;await dbPut('cards',c)}
+    const c=byId(S.cards,h.id);if(c){c.stop=h.prev;c.u=Date.now();await dbPut('cards',c)}
     s.stopped=s.stopped.filter(x=>x!==h.id);
   }
   s.i--;s.options=null;s.answered=false;s.hint=0;viewStudy();
