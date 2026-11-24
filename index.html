@@ -168,6 +168,44 @@ input.is-dup{border-color:var(--bad)!important}
   nav.tabs button{flex-direction:row;justify-content:center;gap:6px;padding:6px 2px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+/* игры */
+.fight .q{padding:16px 14px;margin:6px 0 10px}.fight .txt{font-size:clamp(24px,7vw,34px)}
+@media (max-width:699px){.boss{width:min(36vw,22vh,160px)}}
+.lvl{width:52px;height:52px;border-radius:50%;background:var(--grad);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--font-display);font-size:24px;flex:none}
+.gcard{display:flex;align-items:center;gap:14px;width:100%;text-align:left;padding:14px 16px;border-radius:22px;background:var(--surface);box-shadow:var(--shadow)}
+.gcard b{display:block;font-family:var(--font-display);font-size:20px}.gcard span.grow span{display:block;color:var(--muted);font-size:14px}
+.gic{width:64px;height:64px;flex:none;display:grid;place-items:center}.gic svg{width:100%;height:100%}
+.hud{padding:6px 12px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-weight:800;font-size:14px}
+.mem-grid{display:grid;gap:8px;grid-auto-rows:minmax(76px,1fr)}
+.tile{border-radius:16px;padding:6px;background:var(--surface);box-shadow:var(--shadow);border:2px solid transparent;font-weight:700;line-height:1.2;overflow-wrap:anywhere;display:grid;place-items:center;text-align:center;transition:transform .15s,opacity .35s,background .15s}
+.tile.f{background:color-mix(in srgb,var(--accent) 16%,var(--surface))}
+.tile.b{background:color-mix(in srgb,var(--accent2) 18%,var(--surface))}
+.tile.sel{border-color:var(--accent);transform:scale(1.04)}
+.tile.done{opacity:0;transform:scale(.6);pointer-events:none}
+.tile.bad{background:var(--bad-bg);border-color:var(--bad);color:var(--bad);animation:shake .4s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+.stars{display:flex;justify-content:center;gap:6px}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;margin-top:8px}
+.bcard{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;border-radius:20px;background:var(--surface);box-shadow:var(--shadow);min-width:0}
+.bcard:disabled{opacity:.45}.bcard b{display:block;overflow-wrap:anywhere}.bcard span.grow span{display:block;color:var(--muted);font-size:13px}
+.bav{width:62px;height:62px;flex:none}.bav svg,.gic svg{display:block}
+.boss-svg{width:100%;height:100%;display:block}
+.fight{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.bwrap{position:relative;text-align:center}
+.bname b{display:block;font-family:var(--font-display);font-size:18px;overflow-wrap:anywhere}.bname span{color:var(--muted);font-size:13px;font-weight:700}
+.hpbar{position:relative;height:18px;border-radius:99px;background:var(--surface2);overflow:hidden;margin:8px auto 4px;max-width:340px}
+.hpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--bad),#ff9a76);transition:width .3s}
+.hpbar span{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--fg)}
+.boss{width:min(44vw,34vh,210px);aspect-ratio:1;margin:0 auto;position:relative}
+.boss.hit .boss-svg{animation:shake .35s}
+.boss.dead .boss-svg{transform:rotate(78deg) translate(14px,10px);opacity:.55;transition:transform .5s,opacity .5s}
+.dmg{position:absolute;left:50%;top:44%;font-family:var(--font-display);font-size:34px;color:var(--bad);opacity:0;pointer-events:none;text-shadow:0 2px 0 var(--surface)}
+.dmg.go{animation:dmgup .8s ease-out}
+@keyframes dmgup{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-48px)}}
+.hearts{display:flex;gap:2px}
+.combo{min-height:20px;text-align:center;font-weight:800;color:var(--accent)}
+@media (min-width:700px) and (orientation:landscape){.fight{grid-template-columns:minmax(0,260px) minmax(0,1fr);align-items:start}.boss{width:min(100%,230px)}}
+@media (orientation:landscape) and (max-height:560px){.boss{width:min(30vh,150px)}}
 </style>
 </head>
 <body>
@@ -613,8 +651,8 @@ function editCat(id,defFolder){
 /* ---------- Резервная копия в файле и перенос между устройствами ---------- */
 const fmtDate=(iso)=>{try{return new Date(iso).toLocaleString('ru-RU',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
 function buildBackup(){
-  return {app:'kartochki',v:2,exported:new Date().toISOString(),cards:S.cards,cats:S.cats,folders:S.folders,events:S.events,cycle:S.cycle,
-    meta:{frontLang:S.meta.frontLang,count:S.meta.count}};
+  return {app:'kartochki',v:2,exported:new Date().toISOString(),cards:S.cards,cats:S.cats,folders:S.folders,events:S.events,cycle:S.cycle,dailyLog:S.dailyLog,
+    meta:{frontLang:S.meta.frontLang,count:S.meta.count,dailyRandom:S.meta.dailyRandom,dailyHard:S.meta.dailyHard,xp:S.meta.xp,boss:S.meta.boss,memBest:S.meta.memBest,sound:S.meta.sound,vibe:S.meta.vibe}};
 }
 const backupName=()=>`kartochki-kopiya-${dayKey(Date.now())}.json`;
 function backupFile(){
@@ -666,7 +704,11 @@ async function mergeData(d){
   /* круги */
   if(d.cycle&&typeof d.cycle==='object'){for(const k of Object.keys(d.cycle)){if(!Array.isArray(d.cycle[k]))continue;
     const cur=new Set(S.cycle[k]||[]);d.cycle[k].forEach(i=>cur.add(idMap.get(i)||i));S.cycle[k]=[...cur]}}
+  if(d.dailyLog&&typeof d.dailyLog==='object'){for(const [k,v] of Object.entries(d.dailyLog)){const id=idMap.get(k)||k;const L=S.dailyLog[id];if(!L||(v.due&&L.due&&v.due>L.due&&v.step>=(L.step||0)))S.dailyLog[id]=v}saveDailyLog()}
   if(d.meta&&d.meta.frontLang&&S.meta.frontLang==='Иностранный')S.meta.frontLang=d.meta.frontLang;
+  if(d.meta){const dm=d.meta;S.meta.xp=Math.max(S.meta.xp||0,dm.xp||0);
+    if(dm.boss&&typeof dm.boss==='object'){const B=(S.meta.boss=S.meta.boss||{});for(const [k,v] of Object.entries(dm.boss)){const id=idMap.get(k)||k,o=B[id]||(B[id]={w:0,l:0});o.w=Math.max(o.w,v.w||0);o.l=Math.max(o.l,v.l||0)}}
+    if(dm.memBest&&typeof dm.memBest==='object'){const B=(S.meta.memBest=S.meta.memBest||{});for(const [k,v] of Object.entries(dm.memBest)){if(!B[k]||(v&&v.t<B[k].t))B[k]=v}}}
   await dbPutMany('cards',[...newCards,...changed]);
   if(catTouched.size)await dbPutMany('cats',[...catTouched]);
   if(newEv.length)await dbPutMany('events',newEv);
@@ -679,7 +721,11 @@ async function replaceData(d){
   await dbPutMany('cards',d.cards);await dbPutMany('cats',d.cats||[]);await dbPutMany('events',d.events||[]);
   S.cards=d.cards;S.cats=d.cats||[];S.events=d.events||[];S.folders=Array.isArray(d.folders)?d.folders:[];await saveFolders();
   S.cycle={classic:[],choice:[],write:[],chain:[],...(d.cycle||{})};await saveCycle();
-  if(d.meta){S.meta={...S.meta,frontLang:d.meta.frontLang||S.meta.frontLang};if(typeof d.meta.count==='number'){S.meta.count=d.meta.count;S.setup.count=d.meta.count}}
+  S.dailyLog=d.dailyLog&&typeof d.dailyLog==='object'?d.dailyLog:{};saveDailyLog();
+  if(d.meta){S.meta={...S.meta,frontLang:d.meta.frontLang||S.meta.frontLang};if(typeof d.meta.count==='number'){S.meta.count=d.meta.count;S.setup.count=d.meta.count}
+    for(const k of ['dailyRandom','dailyHard','xp'])if(typeof d.meta[k]==='number')S.meta[k]=d.meta[k];
+    for(const k of ['boss','memBest'])if(d.meta[k]&&typeof d.meta[k]==='object')S.meta[k]=d.meta[k];
+    for(const k of ['sound','vibe'])if(typeof d.meta[k]==='boolean')S.meta[k]=d.meta[k]}
   await dbPut('meta',{k:'meta',...S.meta});
 }
 async function readBackupFile(f){
@@ -903,7 +949,7 @@ function bindRun(v){
 function editInStudy(){
   const s=S.study,c=s.queue[s.i];
   S.afterEdit=()=>{
-    if(!byId(S.cards,c.id)){s.queue.splice(s.i,1);s.options=null;s.answered=false;s.hint=0;
+    if(!byId(S.cards,c.id)){s.queue.splice(s.i,1);s.options=null;s.answered=false;s.hint=0;s.flipped=false;s.typed='';s.picked=null;s.fbHtml='';
       if(s.i>=s.queue.length){finishRound();return}viewStudy();return}
     if(s.answered)next();else viewStudy();
   };
@@ -917,6 +963,7 @@ async function mark(c,res){
     if(key&&!s.daily&&!stopMode()){const a=S.cycle[key]||(S.cycle[key]=[]);if(!a.includes(c.id)){a.push(c.id);h.cycleKey=key;saveCycle()}}
     if(s.daily&&(!s.chain||s.chain.stage===2)&&S.daily&&!S.daily.done.includes(c.id)){S.daily.done.push(c.id);h.daily=true;saveDaily()}
   }
+  if(s.daily&&S.daily&&(res==='bad'||!s.chain||s.chain.stage===2)){h.dprev=dailyNote(c.id,res)}
   s.hist.push(h);
 }
 /* вернуться к предыдущей карточке и отменить её отметку */
@@ -927,18 +974,19 @@ async function goBack(){
     const arr=h.res==='ok'?s.ok:s.bad;const k=arr.lastIndexOf(h.id);if(k>=0)arr.splice(k,1);
     if(h.cycleKey){S.cycle[h.cycleKey]=(S.cycle[h.cycleKey]||[]).filter(x=>x!==h.id);saveCycle()}
     if(h.daily&&S.daily){S.daily.done=S.daily.done.filter(x=>x!==h.id);saveDaily()}
+    if(h.dprev!==undefined)dailyUndo(h.id,h.dprev);
   }else{
     const c=byId(S.cards,h.id);if(c){c.stop=h.prev;c.u=Date.now();await dbPut('cards',c)}
     s.stopped=s.stopped.filter(x=>x!==h.id);
   }
-  s.i--;s.options=null;s.answered=false;s.hint=0;viewStudy();
+  s.i--;s.options=null;s.answered=false;s.hint=0;s.flipped=false;s.typed='';s.picked=null;s.fbHtml='';viewStudy();
 }
 function next(){
-  const s=S.study;s.i++;s.options=null;s.answered=false;s.hint=0;
+  const s=S.study;s.i++;s.options=null;s.answered=false;s.hint=0;s.flipped=false;s.typed='';s.picked=null;s.fbHtml='';
   if(s.i>=s.queue.length)finishRound();else viewStudy();
 }
 function resetQueue(list){
-  const s=S.study;s.queue=S.setup.shuffle?shuffle(list):list.slice();s.i=0;s.ok=[];s.bad=[];s.hist=[];s.options=null;s.answered=false;s.hint=0;
+  const s=S.study;s.queue=S.setup.shuffle?shuffle(list):list.slice();s.i=0;s.ok=[];s.bad=[];s.hist=[];s.options=null;s.answered=false;s.hint=0;s.flipped=false;s.typed='';s.picked=null;s.fbHtml='';
 }
 function finishRound(){
   const s=S.study;
@@ -959,6 +1007,7 @@ function finishRound(){
 function bindClassic(c){
   const stage=$('#stage'),dw=$('#dw'),flip=$('#flip'),bl=$('#bl'),br=$('#br');
   let x0=null,dx=0,done=false;
+  if(S.study.flipped)flip.classList.add('is-flipped');
   const commit=async(dir)=>{
     if(done)return;done=true;
     dw.style.transition='transform .28s,opacity .28s';dw.style.transform=`translateX(${dir*140}%) rotate(${dir*18}deg)`;dw.style.opacity='0';
@@ -971,27 +1020,32 @@ function bindClassic(c){
   const end=()=>{if(x0===null)return;const d=dx;x0=null;
     if(Math.abs(d)>90)commit(d>0?1:-1);
     else{dw.style.transition='transform .25s';dw.style.transform='';br.style.opacity=0;bl.style.opacity=0;
-      if(Math.abs(d)<6)flip.classList.toggle('is-flipped')}};
+      if(Math.abs(d)<6){flip.classList.toggle('is-flipped');S.study.flipped=flip.classList.contains('is-flipped')}}};
   stage.addEventListener('pointerup',end);stage.addEventListener('pointercancel',()=>{x0=null;dw.style.transform='';br.style.opacity=0;bl.style.opacity=0});
   $('#bOk').onclick=()=>commit(1);$('#bBad').onclick=()=>commit(-1);
 }
 /* варианты */
+function showChoiceResult(c,n){
+  const s=S.study,picked=s.options[n],good=picked.id===c.id||norm(answerOf(picked))===norm(answerOf(c));
+  $('#opts').querySelectorAll('.opt').forEach((el,k)=>{const o=s.options[k];
+    if(o.id===c.id||norm(answerOf(o))===norm(answerOf(c)))el.classList.add('right');else if(k===n)el.classList.add('wrong')});
+  $('#fb').innerHTML=`<div class="feedback ${good?'ok':'bad'}">${good?'✓ Верно':'✗ Неверно. Правильно: '+esc(answerOf(c))}</div><button class="btn block" id="nx" style="margin-top:10px">Дальше</button>`;
+  $('#nx').onclick=()=>next();
+  return good;
+}
 function bindChoice(c){
   const s=S.study;
+  if(s.answered&&s.picked!=null)showChoiceResult(c,s.picked);   /* вернулись во вкладку после ответа */
   $('#opts').addEventListener('click',async(e)=>{
-    const b=e.target.closest('.opt');if(!b||s.answered)return;s.answered=true;
-    const picked=s.options[+b.dataset.o],good=picked.id===c.id||norm(answerOf(picked))===norm(answerOf(c));
-    $('#opts').querySelectorAll('.opt').forEach((el,n)=>{const o=s.options[n];
-      if(o.id===c.id||norm(answerOf(o))===norm(answerOf(c)))el.classList.add('right');else if(el===b)el.classList.add('wrong')});
-    $('#fb').innerHTML=`<div class="feedback ${good?'ok':'bad'}">${good?'✓ Верно':'✗ Неверно. Правильно: '+esc(answerOf(c))}</div><button class="btn block" id="nx" style="margin-top:10px">Дальше</button>`;
-    $('#nx').onclick=()=>next();$('#nx').focus();
+    const b=e.target.closest('.opt');if(!b||s.answered)return;s.answered=true;s.picked=+b.dataset.o;
+    const good=showChoiceResult(c,s.picked);$('#nx').focus();
     await mark(c,good?'ok':'bad');
   });
 }
 /* письмо: подсказка раскрывает до двух знаков, «не знаю» сразу показывает ответ */
 const variants=variantKeys;
 function bindWrite(c){
-  const s=S.study,inp=$('#ans');setTimeout(()=>inp.focus(),50);
+  const s=S.study,inp=$('#ans');inp.value=s.typed||'';inp.addEventListener('input',()=>{s.typed=inp.value});if(!s.answered)setTimeout(()=>inp.focus(),50);
   const chars=Array.from(splitVariants(answerOf(c))[0]||answerOf(c));
   const maxHint=Math.min(2,chars.length-1);
   const showHint=()=>{const k=s.hint||0;const b=$('#hintBox');
@@ -1005,19 +1059,19 @@ function bindWrite(c){
     s.hint=(s.hint||0)+1;showHint();inp.focus();
   };
   const lock=()=>{inp.disabled=true;$('#bHint').disabled=true;$('#bDont').disabled=true;$('#bHint').style.opacity=.45;$('#bDont').style.opacity=.45};
+  const finish=(html)=>{lock();$('#fb').innerHTML=html;s.fbHtml=html;const b=$('#check');b.textContent='Дальше';b.focus()};
+  if(s.answered&&s.fbHtml)finish(s.fbHtml);   /* вернулись во вкладку после ответа */
   $('#bDont').onclick=async()=>{
-    if(s.answered)return;s.answered=true;lock();
-    $('#fb').innerHTML=`<div class="feedback bad">✗ Правильно: ${esc(answerOf(c))}</div>`;
-    const b=$('#check');b.textContent='Дальше';b.focus();
+    if(s.answered)return;s.answered=true;
+    finish(`<div class="feedback bad">✗ Правильно: ${esc(answerOf(c))}</div>`);
     await mark(c,'bad');
   };
   const go=async()=>{
     if(s.answered){next();return}
     const val=norm(inp.value);if(!val){toast('Введите ответ или нажмите «Не знаю»');return}
-    s.answered=true;lock();
+    s.answered=true;
     const good=val===norm(answerOf(c))||variants(answerOf(c)).includes(val);
-    $('#fb').innerHTML=`<div class="feedback ${good?'ok':'bad'}">${good?'✓ Верно':'✗ Неверно. Правильно: '+esc(answerOf(c))}</div>`;
-    const b=$('#check');b.textContent='Дальше';b.focus();
+    finish(`<div class="feedback ${good?'ok':'bad'}">${good?'✓ Верно':'✗ Неверно. Правильно: '+esc(answerOf(c))}</div>`);
     await mark(c,good?'ok':'bad');
   };
   $('#check').onclick=go;
@@ -1049,38 +1103,76 @@ function bindDone(v){
     S.study={...s,phase:'run',queue:S.setup.shuffle?shuffle(q):q,i:0,ok:[],bad:[],stopped:[],answered:false,hist:[],hint:0,options:null};viewStudy()};
   v.querySelector('#back').onclick=()=>{S.study={phase:'setup'};viewStudy()};
 }
-
 /* ---------- Карточки дня ---------- */
-const DAILY_RANDOM=30,DAILY_HARD=10;
 const saveDaily=()=>dbPut('meta',{k:'daily',...S.daily}).catch(()=>{});
-function buildDaily(force){
+const saveDailyLog=()=>dbPut('meta',{k:'dailylog',m:S.dailyLog}).catch(()=>{});
+S.dailyLog={};
+const dailyRandomN=()=>Math.max(0,Math.min(500,S.meta.dailyRandom??30));
+const dailyHardN=()=>Math.max(0,Math.min(200,S.meta.dailyHard??10));
+const STEP_DAYS=[1,2,4,8,16];            /* через сколько дней вернуть трудное слово */
+const addDays=(key,n)=>{const [y,m,d]=key.split('-').map(Number);return dayKey(new Date(y,m-1,d+n).getTime())};
+const daysBetween=(a,b)=>{const p=(k)=>{const [y,m,d]=k.split('-').map(Number);return Date.UTC(y,m-1,d)};return Math.round((p(b)-p(a))/864e5)};
+const lastAnswers=()=>{const m=new Map();for(const e of S.events){if(e.t>(m.get(e.c)||0))m.set(e.c,e.t)}return m};
+
+/* Набор дня: трудные слова по расписанию + слова, к которым дольше всего не возвращались (по любым занятиям).
+   force: собрать заново; keepAll: не исключать слова текущего набора (смена размера). */
+function buildDaily(force,keepAll){
   const t=dayKey(Date.now());
   if(!force&&S.daily&&S.daily.date===t){S.daily.ids=S.daily.ids.filter(id=>byId(S.cards,id));S.daily.hard=(S.daily.hard||[]).filter(id=>S.daily.ids.includes(id));return S.daily}
-  const st=cardStats(),live=S.cards.filter(c=>!c.stop);
-  /* трудные: чаще всего «не знаю»/ошибки, плюс последний ответ неверный, минус верные ответы */
-  const hard=live.map(c=>{const x=st.get(c.id)||{ok:0,bad:0,last:null};return {c,bad:x.bad,score:x.bad*2+(x.last==='bad'?3:0)-x.ok*0.5}})
-    .filter(x=>x.bad>0&&x.score>0).sort((a,b)=>b.score-a.score).slice(0,DAILY_HARD);
-  const hardIds=new Set(hard.map(x=>x.c.id));
-  const rnd=shuffle(live.filter(c=>!hardIds.has(c.id))).slice(0,DAILY_RANDOM);
-  S.daily={date:t,ids:[...hard.map(x=>x.c.id),...rnd.map(c=>c.id)],hard:hard.map(x=>x.c.id),done:[]};
+  const sameDay=S.daily&&S.daily.date===t;
+  const excl=new Set(force&&sameDay&&!keepAll?[...(S.daily.excl||[]),...S.daily.ids]:[]);
+  const st=cardStats(),last=lastAnswers(),live=S.cards.filter(c=>!c.stop&&!excl.has(c.id));
+  const due=[];
+  for(const c of live){
+    const L=S.dailyLog[c.id],x=st.get(c.id)||{ok:0,bad:0,last:null};
+    if(L&&L.hard){if(L.due<=t)due.push({c,over:daysBetween(L.due,t),score:x.bad})}
+    else if(!L&&x.bad>0){const score=x.bad*2+(x.last==='bad'?3:0)-x.ok*0.5;if(score>0)due.push({c,over:0,score})}
+  }
+  due.sort((a,b)=>b.over-a.over||b.score-a.score);
+  const hard=due.slice(0,dailyHardN()),hardIds=new Set(hard.map(x=>x.c.id));
+  const rest=live.filter(c=>!hardIds.has(c.id)).map(c=>({c,t:last.get(c.id)||0,r:Math.random()}))
+    .sort((a,b)=>a.t-b.t||a.r-b.r).slice(0,dailyRandomN());
+  S.daily={date:t,ids:[...hard.map(x=>x.c.id),...rest.map(x=>x.c.id)],hard:hard.map(x=>x.c.id),done:[],excl:[...excl]};
   saveDaily();return S.daily;
 }
 function dailyRemaining(d){return d.ids.filter(id=>!d.done.includes(id)).map(id=>byId(S.cards,id)).filter(c=>c&&!c.stop)}
+/* учёт результата в расписании трудных слов; возвращает прежнее состояние для отмены */
+function dailyNote(id,res){
+  const t=dayKey(Date.now()),prev=S.dailyLog[id]?JSON.stringify(S.dailyLog[id]):null;
+  const wasHard=(S.daily.hard||[]).includes(id);
+  let L=S.dailyLog[id];
+  if(res==='bad'){if(!L)L=S.dailyLog[id]={};Object.assign(L,{hard:true,step:0,due:addDays(t,STEP_DAYS[0]),badDay:t,okDay:null})}
+  else if(wasHard&&(!L||(L.badDay!==t&&L.okDay!==t))){
+    if(!L)L=S.dailyLog[id]={hard:true,step:0,badDay:null};
+    L.step=(L.step||0)+1;L.okDay=t;
+    if(L.step>=STEP_DAYS.length)L.hard=false;else{L.hard=true;L.due=addDays(t,STEP_DAYS[L.step])}
+  }
+  saveDailyLog();return prev;
+}
+function dailyUndo(id,prev){if(prev===undefined)return;if(prev===null)delete S.dailyLog[id];else S.dailyLog[id]=JSON.parse(prev);saveDailyLog()}
+function dailyStaleCount(){
+  const last=lastAnswers(),limit=Date.now()-7*864e5,live=S.cards.filter(c=>!c.stop);
+  return {n:live.filter(c=>(last.get(c.id)||0)<limit).length,total:live.length};
+}
 function dailySetupHtml(){
-  const d=buildDaily(),rem=dailyRemaining(d),T=S.setup;
+  const d=buildDaily(),rem=dailyRemaining(d),T=S.setup,stale=dailyStaleCount();
   const how=[['chain','Все три подряд'],['classic','Классика'],['choice','Варианты'],['write','Письмо']];
+  const kp=(n,l,col)=>`<div style="text-align:center"><b class="num" style="font-family:var(--font-display);font-size:26px${col?';color:'+col:''}">${n}</b><br><span style="font-size:12px;color:var(--muted);font-weight:700">${l}</span></div>`;
   return `<h2>Карточки дня</h2>
-    <div class="sub">Каждый день набор собирается заново: ${DAILY_RANDOM} случайных слов и до ${DAILY_HARD} самых трудных, на которых вы чаще всего ошибались или нажимали «не знаю». Это своего рода интервальное повторение.</div>
-    <div class="card"><div class="kpi" style="margin-bottom:0"><div style="text-align:center"><b class="num" style="font-family:var(--font-display);font-size:26px">${d.ids.length}</b><br><span style="font-size:12px;color:var(--muted);font-weight:700">в наборе</span></div>
-      <div style="text-align:center"><b class="num" style="font-family:var(--font-display);font-size:26px;color:var(--bad)">${(d.hard||[]).length}</b><br><span style="font-size:12px;color:var(--muted);font-weight:700">трудных</span></div>
-      <div style="text-align:center"><b class="num" style="font-family:var(--font-display);font-size:26px;color:var(--ok)">${d.done.length}</b><br><span style="font-size:12px;color:var(--muted);font-weight:700">пройдено</span></div></div></div>
+    <div class="sub">Каждый день набор собирается заново. В него попадают слова, к которым вы дольше всего не возвращались (по любым занятиям, ни разу не бывавшие идут первыми), и трудные слова: их возвращаем через 1, 2, 4, 8, 16 дней, пока вы отвечаете верно.</div>
+    <div class="card"><div class="kpi" style="margin-bottom:0">${kp(d.ids.length,'слов в наборе')}${kp((d.hard||[]).length,'трудных','var(--bad)')}${kp(d.done.length,'пройдено','var(--ok)')}</div>
+      <div class="sub" style="margin:10px 0 0;text-align:center">Давно не повторялись (больше недели или ни разу): <b class="num">${stale.n}</b> из <b class="num">${stale.total}</b></div></div>
+    <h2 style="margin-top:20px">Размер набора</h2>
+    <div class="row wrap" style="gap:14px"><label class="row" style="gap:8px"><span style="font-weight:700">Давних слов</span><input type="text" inputmode="numeric" id="dRnd" class="cnt" value="${dailyRandomN()}" autocomplete="off" aria-label="Сколько давних слов в наборе"></label>
+      <label class="row" style="gap:8px"><span style="font-weight:700">Трудных до</span><input type="text" inputmode="numeric" id="dHard" class="cnt" value="${dailyHardN()}" autocomplete="off" aria-label="Сколько трудных слов в наборе"></label></div>
+    <div class="sub" id="dSizeMsg" style="margin:8px 0 0">${d.done.length?'Сегодня вы уже начали, поэтому новый размер применится к следующему набору или после «Собрать набор заново».':'Новый размер применяется сразу.'}</div>
     <h2 style="margin-top:20px">Как проходить</h2>
     <div class="row wrap">${how.map(([k,n])=>`<button class="chip" data-how="${k}" aria-pressed="${S.dailyHow===k}">${n}</button>`).join('')}</div>
     <h2 style="margin-top:20px">Показывать сторону</h2>
     <div class="row wrap"><button class="chip" data-side="front" aria-pressed="${T.side==='front'}">${esc(S.meta.frontLang)} → русский</button>
       <button class="chip" data-side="back" aria-pressed="${T.side==='back'}">Русский → ${esc(S.meta.frontLang)}</button></div>
     <label class="check" style="margin-top:14px"><input type="checkbox" id="shuf" ${T.shuffle?'checked':''}><span class="grow">Перемешать карточки</span></label>
-    <div id="setupMsg" class="sub" style="margin:12px 0 0">${rem.length?`Осталось пройти сегодня: ${rem.length}.`:'На сегодня всё пройдено. Можно собрать новый набор.'}</div>
+    <div id="setupMsg" class="sub" style="margin:12px 0 0">${rem.length?`Осталось пройти сегодня: ${rem.length}.`:'На сегодня всё пройдено. Можно собрать новый набор: в него войдут другие слова.'}</div>
     <div class="stack" style="margin-top:10px"><button class="btn block" id="go" ${rem.length?'':'disabled'}>Начать</button>
       <button class="btn soft block" id="reroll">Собрать набор заново</button></div>`;
 }
@@ -1091,6 +1183,11 @@ function bindDaily(v){
   v.querySelector('#shuf').onchange=(e)=>T.shuffle=e.target.checked;
   v.querySelector('#go').onclick=startSession;
   v.querySelector('#reroll').onclick=()=>{buildDaily(true);toast('Набор собран заново');viewStudy()};
+  const size=(id,key)=>v.querySelector(id).addEventListener('change',e=>{
+    const n=parseInt(e.target.value,10);if(!(n>=0)){e.target.value=key==='dailyRandom'?dailyRandomN():dailyHardN();return}
+    S.meta[key]=n;dbPut('meta',{k:'meta',...S.meta}).catch(()=>{});
+    if(S.daily&&!S.daily.done.length){buildDaily(true,true);toast('Набор пересобран под новый размер')}viewStudy()});
+  size('#dRnd','dailyRandom');size('#dHard','dailyHard');
 }
 function startDaily(){
   const d=buildDaily(),rem=dailyRemaining(d),how=S.dailyHow||'chain';
@@ -1100,6 +1197,288 @@ function startDaily(){
   S.study={phase:'run',queue:q,i:0,ok:[],bad:[],stopped:[],answered:false,hist:[],hint:0,daily:true,
     single:how==='chain'?null:how,chain:how==='chain'?{stage:0,round:1,batch:q.slice(),total:q.length}:null};
   viewStudy();
+}
+/* ---------- Вкладка: игры ---------- */
+S.game={view:'hub',run:null};S.gsel=new Set(['__all']);S.gsize='auto';
+let gTimer=null;
+const saveMeta=()=>dbPut('meta',{k:'meta',...S.meta}).catch(()=>{});
+/* звук и вибрация (можно выключить в «Играх») */
+let _ac=null;
+function tone(f,d,type,at,vol){
+  if(S.meta.sound===false)return;
+  try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;_ac=_ac||new AC();if(_ac.state==='suspended')_ac.resume();
+    const o=_ac.createOscillator(),g=_ac.createGain(),t=_ac.currentTime+(at||0);
+    o.type=type||'sine';o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol||0.12,t+0.012);g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+    o.connect(g).connect(_ac.destination);o.start(t);o.stop(t+d+0.02)}catch(e){}
+}
+const SFX={
+  pick:()=>tone(520,.07,'sine',0,.08),
+  ok:()=>{tone(660,.1,'sine',0);tone(880,.16,'sine',.09)},
+  bad:()=>{tone(190,.22,'sawtooth',0,.09);tone(150,.22,'sawtooth',.1,.07)},
+  hit:()=>{tone(140,.12,'square',0,.1);tone(320,.1,'triangle',.02,.08)},
+  win:()=>[523,659,784,1046].forEach((f,i)=>tone(f,.22,'triangle',i*.12,.11)),
+  lose:()=>[392,330,262,196].forEach((f,i)=>tone(f,.28,'triangle',i*.14,.1))
+};
+const sfx=(n)=>{try{SFX[n]()}catch(e){}};
+const buzz=(p)=>{if(S.meta.vibe===false)return;try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}};
+/* опыт и уровень */
+function levelOf(xp){let l=1,need=60;xp=xp||0;while(xp>=need){xp-=need;l++;need=60+(l-1)*30}return {l,cur:xp,need}}
+function addXp(n){S.meta.xp=(S.meta.xp||0)+n;saveMeta()}
+/* слова для игр: сначала те, к которым дольше всего не возвращались */
+function gameCards(){
+  let cards;
+  if(S.gsel.has('__all')||!S.gsel.size)cards=S.cards.filter(c=>!c.stop);
+  else{const ids=new Set();S.cats.filter(k=>S.gsel.has(k.id)).forEach(k=>k.cardIds.forEach(i=>ids.add(i)));cards=S.cards.filter(c=>ids.has(c.id)&&!c.stop)}
+  return cards;
+}
+function pickWords(cards,n){
+  const last=lastAnswers();
+  const ordered=cards.map(c=>({c,t:last.get(c.id)||0,r:Math.random()})).sort((a,b)=>a.t-b.t||a.r-b.r).map(x=>x.c);
+  return shuffle(ordered.slice(0,Math.max(n,Math.min(ordered.length,n*2)))).slice(0,n);
+}
+const fmtTime=(ms)=>{const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+const hash=(str)=>{let h=2166136261;for(const ch of String(str)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
+
+function gameLeave(){clearInterval(gTimer);gTimer=null;const r=S.game.run;if(r&&r.running){r.acc+=Date.now()-r.t0;r.running=false}}
+function viewGames(){
+  clearInterval(gTimer);gTimer=null;
+  const r=S.game.run;if(r&&r.kind==='mem'&&!r.done&&!r.running){r.running=true;r.t0=Date.now()}
+  const v=S.game.view,el=$('#view');
+  if(v==='hub')hubView(el);
+  else if(v==='memSetup')memSetupView(el);
+  else if(v==='mem')memRunView(el);
+  else if(v==='memDone')memDoneView(el);
+  else if(v==='bossList')bossListView(el);
+  else if(v==='fight')fightView(el);
+  else if(v==='bossDone')bossDoneView(el);
+}
+const goG=(view)=>{S.game.view=view;viewGames();scrollTo(0,0)};
+function hubView(el){
+  const L=levelOf(S.meta.xp),pct=Math.round(L.cur/L.need*100);
+  el.innerHTML=`<div class="card"><div class="row"><div class="lvl">${L.l}</div><div class="grow"><b>Уровень ${L.l}</b><div class="sub" style="margin:0"><span class="num">${L.cur}</span> из <span class="num">${L.need}</span> опыта до следующего</div>
+      <div class="progress" style="margin-top:6px"><i style="width:${pct}%"></i></div></div></div>
+    <div class="row wrap" style="margin-top:12px"><button class="chip" id="tSound" aria-pressed="${S.meta.sound!==false}">${S.meta.sound!==false?"Звук: вкл":"Звук: выкл"}</button><button class="chip" id="tVibe" aria-pressed="${S.meta.vibe!==false}">${S.meta.vibe!==false?"Вибрация: вкл":"Вибрация: выкл"}</button></div></div>
+    <div class="stack" style="margin-top:14px">
+      <button class="gcard" id="gMem"><span class="gic">${memIcon()}</span><span class="grow"><b>Мемори</b><span>Соединяйте слово с его переводом. Размер поля подстраивается под экран.</span></span></button>
+      <button class="gcard" id="gBoss"><span class="gic">${bossSvg('hub',{})}</span><span class="grow"><b>Босс</b><span>Каждая категория это монстр. Верные ответы бьют по нему, ошибки стоят сердечек.</span></span></button></div>
+    <div class="sub" style="margin:14px 2px 0">Ответы в играх попадают в статистику так же, как в обычных режимах.</div>`;
+  $('#tSound').onclick=()=>{S.meta.sound=!(S.meta.sound!==false);saveMeta();if(S.meta.sound)sfx('ok');hubView(el)};
+  $('#tVibe').onclick=()=>{S.meta.vibe=!(S.meta.vibe!==false);saveMeta();if(S.meta.vibe)buzz(40);hubView(el)};
+  $('#gMem').onclick=()=>goG('memSetup');$('#gBoss').onclick=()=>goG('bossList');
+}
+function memIcon(){return `<svg viewBox="0 0 64 64" width="56" height="56"><rect x="6" y="10" width="24" height="30" rx="7" fill="var(--accent)" opacity=".9"/><rect x="34" y="24" width="24" height="30" rx="7" fill="var(--accent2)" opacity=".9"/><path d="M30 28l6 6M30 34l6-6" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>`}
+
+/* ---------- Мемори ---------- */
+function memGrid(pairs){
+  const w=Math.max(260,($('#view')?.clientWidth||innerWidth-32)),gap=8,minT=96;
+  const cols=Math.max(3,Math.min(6,Math.floor((w+gap)/(minT+gap))));
+  return cols;
+}
+function memAutoPairs(){
+  const cols=memGrid(),gap=8,availH=Math.max(260,innerHeight-250),rows=Math.max(3,Math.floor((availH+gap)/(84+gap)));
+  return Math.max(4,Math.min(12,Math.floor(cols*rows/2)));
+}
+function memPairsCount(){return S.gsize==='auto'?memAutoPairs():S.gsize}
+function memSetupView(el){
+  const groups=groupedCats().filter(g=>g.cats.length),multi=S.folders.length>0;
+  const row=(id,name,n)=>`<label class="check"><input type="checkbox" data-gs="${id}" ${S.gsel.has(id)?'checked':''}><span class="grow">${esc(name)}</span><span class="pill neutral num">${n}</span></label>`;
+  const cnt=(k)=>k.cardIds.map(i=>byId(S.cards,i)).filter(c=>c&&!c.stop).length;
+  const rows=groups.map(g=>{const r=g.cats.map(k=>row(k.id,k.name,cnt(k))).join('');
+    return g.folder?`<div class="cap" style="margin:8px 2px 0">${esc(g.folder.name)}</div><div class="stack" style="margin-left:10px">${r}</div>`:(multi?'<div class="cap" style="margin:8px 2px 0">Без папки</div>':'')+r}).join('');
+  const sizes=[['auto','Авто'],[5,'5 пар'],[8,'8 пар'],[12,'12 пар']];
+  el.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="chip" id="gBack">← Игры</button></div><h2>Мемори</h2>
+    <div class="sub">Нажмите слово, затем его перевод. Верная пара исчезает, ошибка засчитывается в статистику. В игру попадают слова, к которым давно не возвращались.</div>
+    <div class="stack">${row('__all','Все карточки',S.cards.filter(c=>!c.stop).length)}${rows}</div>
+    <h2 style="margin-top:20px">Размер поля</h2>
+    <div class="row wrap">${sizes.map(([k,n])=>`<button class="chip" data-gz="${k}" aria-pressed="${S.gsize===k}">${n}${k==='auto'?` (сейчас ${memAutoPairs()})`:''}</button>`).join('')}</div>
+    <div id="gMsg" class="sub" style="margin:12px 0 0"></div>
+    <button class="btn block" id="gGo" style="margin-top:8px">Играть</button>`;
+  $('#gBack').onclick=()=>goG('hub');
+  el.querySelectorAll('[data-gs]').forEach(i=>i.onchange=()=>{const id=i.dataset.gs;
+    if(i.checked){if(id==='__all')S.gsel.clear();else S.gsel.delete('__all');S.gsel.add(id)}else S.gsel.delete(id);memSetupView(el)});
+  el.querySelectorAll('[data-gz]').forEach(b=>b.onclick=()=>{S.gsize=b.dataset.gz==='auto'?'auto':+b.dataset.gz;memSetupView(el)});
+  $('#gGo').onclick=memStart;
+}
+function memStart(){
+  const cards=gameCards();
+  if(cards.length<3){$('#gMsg').textContent='Для игры нужно хотя бы 3 карточки в выбранных категориях.';return}
+  const n=Math.min(memPairsCount(),cards.length),picked=pickWords(cards,n),tiles=[];
+  picked.forEach(c=>{tiles.push({cid:c.id,side:'f',text:c.front,st:''});tiles.push({cid:c.id,side:'b',text:c.back,st:''})});
+  S.game.run={kind:'mem',tiles:shuffle(tiles),sel:-1,mist:0,missed:new Set(),matched:0,total:picked.length,acc:0,t0:Date.now(),running:true,done:false,cols:memGrid(),busy:false};
+  S.game.view='mem';viewGames();
+}
+const memElapsed=()=>{const r=S.game.run;return r.acc+(r.running?Date.now()-r.t0:0)};
+function memRunView(el){
+  const r=S.game.run;
+  el.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="chip" id="gQuit">✕ Выйти</button><div class="grow"></div>
+      <span class="hud num" id="hTime">0:00</span><span class="hud num" id="hMist"></span><span class="hud num" id="hPairs"></span></div>
+    <div class="mem-grid" id="grid" style="grid-template-columns:repeat(${r.cols},minmax(0,1fr))">${r.tiles.map((t,i)=>`<button class="tile ${t.side}" data-i="${i}"><span>${esc(t.text)}</span></button>`).join('')}</div>`;
+  el.querySelectorAll('.tile').forEach((b,i)=>{const L=r.tiles[i].text.length;b.style.fontSize=L>16?'13px':L>9?'15px':'18px';paintTile(i)});
+  hud();
+  gTimer=setInterval(()=>{if(S.tab==='games'&&S.game.view==='mem'&&!r.done&&r.running)$('#hTime')&&($('#hTime').textContent=fmtTime(memElapsed()))},400);
+  $('#gQuit').onclick=()=>{S.game.run=null;goG('hub')};
+  $('#grid').onclick=(e)=>{const b=e.target.closest('.tile');if(b)memTap(+b.dataset.i)};
+}
+function hud(){const r=S.game.run;$('#hTime').textContent=fmtTime(memElapsed());$('#hMist').textContent='✗ '+r.mist;$('#hPairs').textContent=r.matched+' / '+r.total}
+function paintTile(i){
+  const r=S.game.run,t=r.tiles[i],b=$(`.tile[data-i="${i}"]`);if(!b)return;
+  b.classList.toggle('sel',r.sel===i);b.classList.toggle('done',t.st==='ok');b.classList.toggle('bad',t.st==='bad');b.disabled=t.st==='ok';
+}
+async function memTap(i){
+  const r=S.game.run,t=r.tiles[i];if(r.done||r.busy||t.st==='ok')return;
+  if(r.sel===i){r.sel=-1;paintTile(i);return}
+  if(r.sel<0||r.tiles[r.sel].side===t.side){const old=r.sel;r.sel=i;if(old>=0)paintTile(old);paintTile(i);sfx('pick');buzz(8);return}
+  const j=r.sel,u=r.tiles[j];r.sel=-1;
+  if(u.cid===t.cid){
+    t.st=u.st='ok';r.matched++;paintTile(i);paintTile(j);sfx('ok');buzz(18);hud();
+    if(!r.missed.has(t.cid))logEvent(t.cid,'ok');
+    addXp(2);
+    if(r.matched>=r.total)memFinish();
+  }else{
+    r.mist++;t.st=u.st='bad';r.busy=true;paintTile(i);paintTile(j);sfx('bad');buzz([50,40,50]);hud();
+    for(const cid of [t.cid,u.cid])if(!r.missed.has(cid)){r.missed.add(cid);logEvent(cid,'bad')}
+    setTimeout(()=>{t.st=u.st='';r.busy=false;if(S.game.run===r&&S.game.view==='mem'){paintTile(i);paintTile(j)}},520);
+  }
+}
+function memFinish(){
+  const r=S.game.run;r.done=true;if(r.running){r.acc+=Date.now()-r.t0;r.running=false}
+  const stars=r.mist===0?3:r.mist<=Math.ceil(r.total/3)?2:1;
+  const best=(S.meta.memBest=S.meta.memBest||{}),key=String(r.total),prev=best[key];
+  const newBest=!prev||r.acc<prev.t;if(newBest)best[key]={t:r.acc,m:r.mist};
+  addXp(stars*5);
+  S.game.last={stars,time:r.acc,mist:r.mist,pairs:r.total,newBest,prev:prev&&prev.t,key};
+  sfx('win');buzz([30,30,60]);
+  setTimeout(()=>{if(S.tab==='games'&&S.game.view==='mem')goG('memDone')},650);
+}
+function memDoneView(el){
+  const g=S.game.last;
+  el.innerHTML=`<h2>Все пары найдены</h2><div class="card" style="text-align:center"><div class="stars">${[1,2,3].map(n=>starSvg(n<=g.stars)).join('')}</div>
+    <div class="kpi" style="margin-top:12px"><div class="card"><b class="num">${fmtTime(g.time)}</b><span>время</span></div><div class="card"><b class="num" style="color:var(--bad)">${g.mist}</b><span>ошибок</span></div><div class="card"><b class="num">${g.pairs}</b><span>пар</span></div></div>
+    <div class="sub" style="margin:10px 0 0">${g.newBest?'Новый рекорд для поля из '+g.pairs+' пар!':'Рекорд для этого размера: '+fmtTime((S.meta.memBest[g.key]||{}).t||g.time)}. Получено опыта: ${g.stars*5+g.pairs*2}.</div></div>
+    <div class="stack" style="margin-top:14px"><button class="btn block" id="gAgain">Ещё раунд</button><button class="btn soft block" id="gHub">К играм</button></div>`;
+  $('#gAgain').onclick=()=>{S.game.view='memSetup';memStart()};$('#gHub').onclick=()=>goG('hub');
+}
+const starSvg=(on)=>`<svg viewBox="0 0 24 24" width="44" height="44"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z" fill="${on?'#f6b73c':'var(--surface2)'}" stroke="${on?'#e59a12':'var(--line)'}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+
+/* ---------- Босс ---------- */
+S.bossHp=15;S.bossDir='mix';
+const BOSS_NICK=['Ворчун','Булькун','Хмурик','Пыхтелка','Лопоух','Зубастик','Тучка','Кляксик','Гремлик','Мямлик'];
+const bossNick=(seed)=>BOSS_NICK[hash(seed)%BOSS_NICK.length];
+/* рисованный монстр: внешность зависит от названия категории */
+function bossSvg(seed,o){
+  o=o||{};const h=hash(seed),hue=h%360,st=o.state||'idle';
+  const body=`hsl(${hue} 70% 80%)`,dark=`hsl(${hue} 40% 42%)`,belly=`hsl(${hue} 80% 92%)`;
+  const shape=h%3,acc=Math.floor(h/3)%3,en=Math.floor(h/9)%3+1;
+  const shapeP=[`<ellipse cx="80" cy="94" rx="56" ry="50"/>`,`<rect x="34" y="38" width="92" height="104" rx="46"/>`,`<path d="M26 124 Q18 60 80 42 Q142 60 134 124 Q80 148 26 124Z"/>`][shape];
+  const accP=[`<path d="M44 56 L34 22 L64 44Z M116 56 L126 22 L96 44Z" fill="${dark}"/>`,
+    `<circle cx="36" cy="58" r="15" fill="${body}" stroke="${dark}" stroke-width="3"/><circle cx="124" cy="58" r="15" fill="${body}" stroke="${dark}" stroke-width="3"/>`,
+    `<path d="M80 44 V18" stroke="${dark}" stroke-width="4" stroke-linecap="round"/><circle cx="80" cy="14" r="8" fill="${dark}"/>`][acc];
+  const pos={1:[[80,86,16]],2:[[62,86,11],[98,86,11]],3:[[50,84,9],[80,76,9],[110,84,9]]}[en];
+  const eye=([x,y,r])=>st==='hit'?`<path d="M${x-r+2} ${y-r/2} L${x+r-2} ${y} L${x-r+2} ${y+r/2}" fill="none" stroke="${dark}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>`
+    :st==='dead'?`<path d="M${x-r/1.5} ${y-r/1.5} L${x+r/1.5} ${y+r/1.5} M${x+r/1.5} ${y-r/1.5} L${x-r/1.5} ${y+r/1.5}" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`
+    :`<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${dark}" stroke-width="3"/><circle cx="${x+(st==='grin'?2:0)}" cy="${y+(st==='grin'?2:0)}" r="${r/2.1}" fill="${dark}"/>`;
+  const mouth=st==='hit'?`<ellipse cx="80" cy="118" rx="8" ry="10" fill="${dark}"/>`
+    :st==='grin'?`<path d="M58 108 Q80 142 102 108Z" fill="#fff" stroke="${dark}" stroke-width="4" stroke-linejoin="round"/>`
+    :st==='dead'?`<path d="M62 118 Q71 110 80 118 T98 118" fill="none" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`
+    :`<path d="M64 112 Q80 126 96 112" fill="none" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`;
+  return `<svg class="boss-svg" viewBox="0 0 160 160" aria-hidden="true"><g fill="${body}" stroke="${dark}" stroke-width="4" stroke-linejoin="round">${shapeP}</g>${accP}
+    <ellipse cx="80" cy="128" rx="28" ry="12" fill="${belly}" opacity=".7"/>${pos.map(eye).join('')}${mouth}</svg>`;
+}
+const heartSvg=(on)=>`<svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="${on?'var(--bad)':'var(--surface2)'}" stroke="${on?'var(--bad)':'var(--line)'}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
+const bossRec=(id)=>(S.meta.boss&&S.meta.boss[id])||{w:0,l:0};
+function bossListView(el){
+  const groups=groupedCats().filter(g=>g.cats.length),multi=S.folders.length>0;
+  const cnt=(k)=>k.cardIds.map(i=>byId(S.cards,i)).filter(c=>c&&!c.stop).length;
+  const card=(id,name,n)=>{const r=bossRec(id);
+    return `<button class="bcard" data-b="${esc(id)}" ${n?'':'disabled'}><span class="bav">${bossSvg(id)}</span><span class="grow"><b>${esc(name)}</b><span>${esc(bossNick(id))} · слов: ${n}${r.w?` · побед: ${r.w}`:''}</span></span></button>`};
+  const list=groups.map(g=>{const r=g.cats.map(k=>card(k.id,k.name,cnt(k))).join('');
+    return (g.folder?`<div class="cap" style="margin:10px 2px 0">${esc(g.folder.name)}</div>`:(multi?'<div class="cap" style="margin:10px 2px 0">Без папки</div>':''))+`<div class="bgrid">${r}</div>`}).join('');
+  el.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="chip" id="gBack">← Игры</button></div><h2>Босс</h2>
+    <div class="sub">Выберите монстра. Верный ответ бьёт по нему, серия из трёх подряд усиливает удар. Три ошибки, и вы проиграли.</div>
+    <div class="cap">Здоровье босса (число вопросов)</div>
+    <div class="row wrap">${[10,15,20].map(n=>`<button class="chip" data-hp="${n}" aria-pressed="${S.bossHp===n}">${n}</button>`).join('')}</div>
+    <div class="cap" style="margin-top:12px">Что показывать</div>
+    <div class="row wrap">${[['f',`${esc(S.meta.frontLang)} → русский`],['b',`Русский → ${esc(S.meta.frontLang)}`],['mix','Вперемешку']].map(([k,n])=>`<button class="chip" data-dir="${k}" aria-pressed="${S.bossDir===k}">${n}</button>`).join('')}</div>
+    <div id="gMsg" class="sub" style="margin:10px 0 0"></div>
+    <div class="bgrid" style="margin-top:8px">${card('__all','Все слова',S.cards.filter(c=>!c.stop).length)}</div>${list}`;
+  $('#gBack').onclick=()=>goG('hub');
+  el.querySelectorAll('[data-hp]').forEach(b=>b.onclick=()=>{S.bossHp=+b.dataset.hp;bossListView(el)});
+  el.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>{S.bossDir=b.dataset.dir;bossListView(el)});
+  el.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>bossStart(b.dataset.b));
+}
+function bossStart(id){
+  const k=id==='__all'?null:byId(S.cats,id),name=k?k.name:'Все слова';
+  const cards=k?k.cardIds.map(i=>byId(S.cards,i)).filter(c=>c&&!c.stop):S.cards.filter(c=>!c.stop);
+  if(!cards.length)return;
+  if(S.cards.length<3){const m=$('#gMsg');if(m)m.textContent='Для боя нужно хотя бы 3 карточки в пуле.';return}
+  const picks=pickWords(cards,Math.min(S.bossHp,cards.length)),queue=[];
+  while(queue.length<S.bossHp*2){const b=shuffle(picks);if(queue.length&&b.length>1&&b[0].id===queue[queue.length-1].id)b.push(b.shift());queue.push(...b)}
+  S.game.run={kind:'boss',id,name,hp:S.bossHp,max:S.bossHp,hearts:3,combo:0,best:0,queue,qi:0,wrong:[],answers:0,cur:null,answered:false,state:'idle',won:null,gained:0,running:false,acc:0};
+  bossAsk();S.game.view='fight';viewGames();
+}
+function bossAsk(){
+  const r=S.game.run,c=r.queue[r.qi],dir=S.bossDir==='mix'?(Math.random()<.5?'f':'b'):S.bossDir;
+  const ans=(x)=>dir==='f'?x.back:x.front,seen=new Set([norm(ans(c))]),pool=[];
+  for(const x of shuffle(S.cards)){const k=norm(ans(x));if(!seen.has(k)){seen.add(k);pool.push(x);if(pool.length>=3)break}}
+  r.cur={card:c,dir,ans,options:shuffle([c,...pool])};r.answered=false;
+}
+function fightView(el){
+  const r=S.game.run,q=r.cur,c=q.card,show=q.dir==='f'?c.front:c.back,lang=q.dir==='f'?S.meta.frontLang:'Русский';
+  el.innerHTML=`<div class="row" style="margin-bottom:8px"><button class="chip" id="gQuit">✕ Сдаться</button><div class="grow"></div><span class="hearts" id="hearts"></span></div>
+    <div class="fight"><div class="bwrap"><div class="bname"><b>${esc(r.name)}</b><span>${esc(bossNick(r.id))}</span></div>
+      <div class="hpbar"><i id="hpFill"></i><span class="num" id="hpTxt"></span></div>
+      <div class="boss" id="boss"></div><div class="dmg" id="dmg"></div></div>
+    <div class="bq"><div class="combo" id="combo"></div>
+      <div class="q" style="margin:8px 0 12px"><span class="lang">${esc(lang)}</span><div class="txt">${esc(show)}</div></div>
+      <div class="stack" id="opts">${q.options.map((o,n)=>`<button class="opt" data-o="${n}">${esc(q.ans(o))}</button>`).join('')}</div><div id="fb" style="margin-top:10px"></div></div></div>`;
+  paintFight();
+  $('#gQuit').onclick=()=>{S.game.run=null;goG('bossList')};
+  $('#opts').onclick=(e)=>{const b=e.target.closest('.opt');if(b)bossAnswer(+b.dataset.o)};
+}
+function paintFight(state){
+  const r=S.game.run;r.state=state||r.state;
+  $('#boss').innerHTML=bossSvg(r.id,{state:r.state});$('#boss').className='boss '+(r.state==='hit'?'hit':r.state==='dead'?'dead':'');
+  $('#hearts').innerHTML=[0,1,2].map(i=>heartSvg(i<r.hearts)).join('');
+  $('#hpFill').style.width=Math.round(r.hp/r.max*100)+'%';$('#hpTxt').textContent=r.hp+' / '+r.max;
+  $('#combo').textContent=r.combo>=2?`Серия ×${r.combo}${r.combo>=3?' · усиленный удар':''}`:'';
+}
+async function bossAnswer(n){
+  const r=S.game.run,q=r.cur;if(r.answered)return;r.answered=true;r.answers++;
+  const picked=q.options[n],c=q.card,good=picked.id===c.id||norm(q.ans(picked))===norm(q.ans(c));
+  $('#opts').querySelectorAll('.opt').forEach((el,k)=>{const o=q.options[k];
+    if(o.id===c.id||norm(q.ans(o))===norm(q.ans(c)))el.classList.add('right');else if(k===n)el.classList.add('wrong')});
+  logEvent(c.id,good?'ok':'bad');
+  if(good){
+    r.combo++;r.best=Math.max(r.best,r.combo);const dmg=1+(r.combo>=3?1:0)+(r.combo>=6?1:0);
+    r.hp=Math.max(0,r.hp-dmg);addXp(2);r.gained+=2;sfx('hit');buzz(25);paintFight('hit');
+    const d=$('#dmg');d.textContent='−'+dmg;d.classList.remove('go');void d.offsetWidth;d.classList.add('go');
+    if(r.hp<=0){setTimeout(()=>bossEnd(true),750);return}
+    setTimeout(()=>{if(S.game.run===r&&S.game.view==='fight'){paintFight('idle')}},320);
+    setTimeout(()=>{if(S.game.run===r&&S.game.view==='fight'){r.qi++;bossAsk();fightView($('#view'))}},800);
+  }else{
+    r.combo=0;r.hearts--;if(!r.wrong.includes(c))r.wrong.push(c);
+    r.queue.splice(Math.min(r.qi+4,r.queue.length),0,c);   /* вернётся через несколько вопросов */
+    sfx('bad');buzz([60,40,60]);paintFight('grin');
+    $('#fb').innerHTML=`<div class="feedback bad">✗ Правильно: ${esc(q.ans(c))}</div>`+(r.hearts>0?'<button class="btn block" id="nx" style="margin-top:10px">Дальше</button>':'');
+    if(r.hearts<=0){setTimeout(()=>bossEnd(false),1100);return}
+    $('#nx').onclick=()=>{r.qi++;bossAsk();fightView($('#view'))};$('#nx').focus();
+  }
+}
+function bossEnd(won){
+  const r=S.game.run;if(!r||S.game.view!=='fight')return;
+  r.won=won;const rec=(S.meta.boss=S.meta.boss||{});const b=rec[r.id]||(rec[r.id]={w:0,l:0});
+  if(won){b.w++;const bonus=15+r.hearts*5;addXp(bonus);r.gained+=bonus;sfx('win');buzz([40,30,40,30,90])}else{b.l++;sfx('lose')}
+  saveMeta();goG('bossDone');
+}
+function bossDoneView(el){
+  const r=S.game.run;
+  el.innerHTML=`<h2>${r.won?'Победа!':'Босс победил'}</h2><div class="card" style="text-align:center">
+    <div class="boss ${r.won?'dead':''}" style="margin:0 auto">${bossSvg(r.id,{state:r.won?'dead':'grin'})}</div>
+    <div class="sub" style="margin:6px 0 10px">${r.won?`«${esc(r.name)}» повержен. `:`«${esc(r.name)}» устоял. `}Получено опыта: ${r.gained}.</div>
+    <div class="kpi"><div class="card"><b class="num">${r.answers}</b><span>ответов</span></div><div class="card"><b class="num">×${r.best}</b><span>лучшая серия</span></div><div class="card"><b class="num" style="color:var(--bad)">${r.wrong.length}</b><span>слов с ошибкой</span></div></div></div>
+    ${r.wrong.length?`<h2 style="margin-top:18px">Стоит повторить</h2><div class="stack">${r.wrong.map(c=>`<div class="item"><div class="w"><b>${esc(c.front)}</b><span>${esc(c.back)}</span></div></div>`).join('')}</div>`:''}
+    <div class="stack" style="margin-top:16px"><button class="btn block" id="gAgain">Ещё бой</button><button class="btn soft block" id="gList">К боссам</button></div>`;
+  $('#gAgain').onclick=()=>bossStart(r.id);$('#gList').onclick=()=>goG('bossList');
 }
 /* ---------- Серия занятий ---------- */
 function streakInfo(){
@@ -1160,13 +1539,14 @@ const TABS=[
  ['cards','Карточки','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="14" height="14" rx="3"/><path d="M7 3h11a3 3 0 0 1 3 3v11"/></svg>'],
  ['cats','Категории','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>'],
  ['study','Учить','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"/></svg>'],
+ ['games','Игры','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="10" rx="5"/><path d="M8 11v4M6 13h4M16 12h.01M18 14h.01"/></svg>'],
  ['stats','Статистика','<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>']];
-const TITLES={cards:'Карточки',cats:'Категории',study:'Учить',stats:'Статистика'};
+const TITLES={cards:'Карточки',cats:'Категории',study:'Учить',games:'Игры',stats:'Статистика'};
 function renderTabs(){
   $('#tabs').innerHTML=TABS.map(([id,n,ic])=>`<button role="tab" data-t="${id}" aria-selected="${S.tab===id}">${ic}<span>${n}</span></button>`).join('');
   $('#tabs').querySelectorAll('button').forEach(b=>b.onclick=()=>{
-    const same=S.tab===b.dataset.t;S.tab=b.dataset.t;
-    if(S.tab==='study')enterStudy(true);else render();
+    const same=S.tab===b.dataset.t;if(S.tab==='games'&&b.dataset.t!=='games')gameLeave();S.tab=b.dataset.t;
+    if(S.tab==='study')enterStudy(false);else render();
     if(!same)scrollTo(0,0);
   });
 }
@@ -1175,6 +1555,7 @@ function render(){
   if(S.tab==='cards')viewCards();
   else if(S.tab==='cats')viewCats();
   else if(S.tab==='study'){if(!S.study)S.study={phase:'setup'};viewStudy()}
+  else if(S.tab==='games')viewGames();
   else viewStats();
 }
 
@@ -1190,6 +1571,7 @@ async function init(){
     const dr=metaAll.find(x=>x.k==='drafts');if(dr){const{k,...rest}=dr;S.drafts=rest}
     const cy=metaAll.find(x=>x.k==='cycle');if(cy){const{k,...rest}=cy;S.cycle={classic:[],choice:[],write:[],chain:[],...rest}}
     const dl=metaAll.find(x=>x.k==='daily');if(dl){const{k,...rest}=dl;S.daily=rest}
+    const dg=metaAll.find(x=>x.k==='dailylog');if(dg&&dg.m)S.dailyLog=dg.m
     const fo=metaAll.find(x=>x.k==='folders');if(fo&&Array.isArray(fo.list))S.folders=fo.list
     if(typeof S.meta.count==='number')S.setup.count=S.meta.count;
     if(!S.meta.seeded&&!S.cards.length){
