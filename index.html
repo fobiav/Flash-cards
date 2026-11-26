@@ -169,6 +169,40 @@ input.is-dup{border-color:var(--bad)!important}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 /* игры */
+@media (min-width:1000px){body.wide #app{max-width:1100px}}
+.fw{display:grid;gap:14px}.fw.wide{grid-template-columns:auto minmax(0,1fr);align-items:start}
+.fw-grid{display:grid;gap:3px;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;margin:0 auto}
+.fc{display:grid;place-items:center;border-radius:8px;background:var(--surface);box-shadow:var(--shadow);font-weight:700;line-height:1;cursor:pointer;transition:background .15s}
+.fc.sel{background:var(--accent);color:var(--accent-ink)}
+.fc.bad{background:var(--bad-bg);color:var(--bad);animation:shake .4s}
+.fc.hint{outline:3px solid var(--stop);outline-offset:-3px}
+.fw-clues{display:flex;flex-wrap:wrap;gap:6px}
+.fwc{padding:6px 10px;border-radius:12px;background:var(--surface);box-shadow:var(--shadow);font-size:14px;font-weight:600}
+.fwc.f{opacity:.7}.fwc .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}
+
+.bcard{position:relative}.bcard.on{outline:3px solid var(--accent);outline-offset:-3px}
+.bchk{position:absolute;top:8px;right:10px;width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-weight:900;color:var(--accent-ink);font-size:13px}
+.bcard.on .bchk{background:var(--accent);border-color:var(--accent)}
+.boss.big{width:min(52vw,40vh,260px)}
+.dmap{position:relative;margin-top:6px}
+.dpath{position:absolute;left:0;top:0;overflow:visible}
+.dp-all{fill:none;stroke:var(--line);stroke-width:6;stroke-dasharray:2 12;stroke-linecap:round}
+.dp-done{fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;opacity:.55}
+.dn{position:absolute;width:96px;margin-left:-48px;margin-top:-38px;text-align:center}
+.dn-c{position:relative;width:76px;height:76px;margin:0 auto;border-radius:50%;background:var(--surface);box-shadow:var(--shadow);border:3px solid var(--line);display:grid;place-items:center;overflow:visible}
+.dn-c svg{width:62px;height:62px}
+.dn.t-final .dn-c{width:92px;height:92px;margin-top:-8px;border-color:#f6c453}.dn.t-final .dn-c svg{width:80px;height:80px}
+.dn.t-spring .dn-c{background:color-mix(in srgb,#5ab4f0 18%,var(--surface));border-color:#5ab4f0}
+.dn.t-start .dn-c{border-style:dashed}
+.dn-ico{font-size:32px;line-height:1}
+.dn-n{font-size:12px;font-weight:800;margin-top:4px;line-height:1.15;overflow-wrap:anywhere;max-height:2.4em;overflow:hidden}
+.dn.passed .dn-c{opacity:.75}
+.dn-x{position:absolute;inset:-4px;display:grid;place-items:center;font-size:64px;font-weight:900;color:var(--bad);line-height:1;pointer-events:none}
+.dn.next .dn-c{border-color:var(--accent);animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 45%,transparent)}50%{box-shadow:0 0 0 10px transparent}}
+.pawn{position:absolute;width:26px;height:34px;margin-left:16px;margin-top:-58px;transition:left .6s ease-in-out,top .6s ease-in-out;z-index:3;pointer-events:none;
+  background:radial-gradient(circle at 50% 28%,var(--accent2) 0 9px,transparent 10px),linear-gradient(var(--accent),var(--accent)) bottom/22px 16px no-repeat;border-radius:4px;filter:drop-shadow(0 3px 3px rgba(0,0,0,.25))}
+
 .fight .q{padding:16px 14px;margin:6px 0 10px}.fight .txt{font-size:clamp(24px,7vw,34px)}
 @media (max-width:699px){.boss{width:min(36vw,22vh,160px)}}
 .lvl{width:52px;height:52px;border-radius:50%;background:var(--grad);color:var(--accent-ink);display:grid;place-items:center;font-family:var(--font-display);font-size:24px;flex:none}
@@ -176,7 +210,8 @@ input.is-dup{border-color:var(--bad)!important}
 .gcard b{display:block;font-family:var(--font-display);font-size:20px}.gcard span.grow span{display:block;color:var(--muted);font-size:14px}
 .gic{width:64px;height:64px;flex:none;display:grid;place-items:center}.gic svg{width:100%;height:100%}
 .hud{padding:6px 12px;border-radius:999px;background:var(--surface);box-shadow:var(--shadow);font-weight:800;font-size:14px}
-.mem-grid{display:grid;gap:8px;grid-auto-rows:minmax(76px,1fr)}
+.mem-grid{display:grid;gap:calc(8px * var(--z,1));grid-auto-rows:minmax(calc(76px * var(--z,1)),1fr)}
+.zoom{display:inline-flex;align-items:center;gap:4px}.zoom .chip{padding:6px 12px;font-size:16px}.zoom .num{font-size:12px;font-weight:800;color:var(--muted);min-width:38px;text-align:center}
 .tile{border-radius:16px;padding:6px;background:var(--surface);box-shadow:var(--shadow);border:2px solid transparent;font-weight:700;line-height:1.2;overflow-wrap:anywhere;display:grid;place-items:center;text-align:center;transition:transform .15s,opacity .35s,background .15s}
 .tile.f{background:color-mix(in srgb,var(--accent) 16%,var(--surface))}
 .tile.b{background:color-mix(in srgb,var(--accent2) 18%,var(--surface))}
@@ -319,9 +354,14 @@ async function logEvent(cardId,result){
 
 /* ---------- Папки категорий ---------- */
 const saveFolders=()=>dbPut('meta',{k:'folders',list:S.folders}).catch(()=>{});
+/* категория может лежать в нескольких папках: k.folderIds = [...] */
+const fids=(k)=>Array.isArray(k.folderIds)?k.folderIds:(k.folderId?[k.folderId]:[]);
+const inFolder=(k,fid)=>fids(k).includes(fid);
+/* старый формат (одна папка в folderId) переводим в список; возвращает изменённые категории */
+function migrateCats(list){const ch=[];for(const k of list){if(!Array.isArray(k.folderIds)||'folderId' in k){k.folderIds=fids(k);delete k.folderId;ch.push(k)}}return ch}
 function groupedCats(){
-  const out=S.folders.map(f=>({folder:f,cats:S.cats.filter(k=>k.folderId===f.id)}));
-  const loose=S.cats.filter(k=>!k.folderId||!byId(S.folders,k.folderId));
+  const out=S.folders.map(f=>({folder:f,cats:S.cats.filter(k=>inFolder(k,f.id))}));
+  const loose=S.cats.filter(k=>!fids(k).some(id=>byId(S.folders,id)));
   if(loose.length||!S.folders.length)out.push({folder:null,cats:loose});
   return out;
 }
@@ -580,7 +620,7 @@ function viewCats(){
     const f=g.folder,open=!S.collapsed.has(f.id);
     return `<div class="stack" style="margin-bottom:12px"><div class="row"><button class="item grow" data-fold="${f.id}" style="text-align:left;background:var(--surface2);box-shadow:none"><span style="font-size:18px;color:var(--accent)">${open?'▾':'▸'}</span><div class="w"><b>${esc(f.name)}</b><span class="num">категорий: ${g.cats.length}</span></div></button>
       <button class="icon-btn" data-editfold="${f.id}" aria-label="Изменить папку" title="Изменить папку">✎</button></div>
-      ${open?(g.cats.length?g.cats.map(catItem).join(''):'<div class="sub" style="margin:0 4px">Папка пока пуста. Откройте категорию и выберите эту папку.</div>'):''}</div>`;
+      ${open?(g.cats.length?g.cats.map(catItem).join(''):'<div class="sub" style="margin:0 4px">Папка пока пуста. Нажмите ✎, чтобы отметить категории.</div>'):''}</div>`;
   }).join('');
   v.innerHTML=`<div class="row" style="margin-bottom:12px"><button class="btn grow" id="addCat">＋ Категория</button><button class="btn soft grow" id="addFolder">＋ Папка</button></div>
     <div class="sub">Одна карточка может входить в несколько категорий. Категории можно складывать в папки.</div>
@@ -593,19 +633,38 @@ function viewCats(){
 }
 function editFolder(id){
   const f=id?byId(S.folders,id):null;
+  const sel=new Set(f?S.cats.filter(k=>inFolder(k,f.id)).map(k=>k.id):[]);
+  const cats=S.cats.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const where=(k)=>{const n=fids(k).filter(x=>(!f||x!==f.id)).map(x=>byId(S.folders,x)).filter(Boolean).map(x=>x.name);return n.length?`также в: ${n.join(', ')}`:''};
   openSheet(`<h2>${f?'Папка':'Новая папка'}</h2>
     <div><label class="f" for="fdName">Название</label><input type="text" id="fdName" value="${esc(f?.name||'')}" autocomplete="off" placeholder="Например: Глаголы"></div>
-    ${f?`<div class="sub" style="margin-top:12px">Категорий в папке: ${S.cats.filter(k=>k.folderId===f.id).length}. При удалении папки категории и карточки останутся, просто окажутся вне папки.</div>`:''}`,
+    ${cats.length?`<div class="row" style="margin:14px 0 6px;align-items:center"><div class="cap grow" style="margin:0">Категории в папке: <span class="num" id="fdN"></span></div><button type="button" class="chip" id="fdAll">Добавить все</button><button type="button" class="chip" id="fdNone">Снять все</button></div>
+    <input type="text" id="fdSearch" placeholder="Поиск категории" autocomplete="off" style="margin-bottom:8px;padding:9px 12px">
+    <div class="stack" id="fdList" style="max-height:46vh;overflow:auto;padding:2px"></div>
+    <div class="sub" style="margin-top:8px">Одна категория может лежать сразу в нескольких папках.${f?' При удалении папки категории и карточки останутся.':''}</div>`:'<div class="sub" style="margin-top:12px">Категорий пока нет. Создайте их, и потом их можно будет положить в папку.</div>'}`,
   ()=>{
-    clearable($('#fdName'));setTimeout(()=>$('#fdName').focus(),50);
+    clearable($('#fdName'));if(!f)setTimeout(()=>$('#fdName').focus(),50);
+    const list=$('#fdList');
+    const draw=()=>{if(!list)return;const q=norm($('#fdSearch').value);
+      list.innerHTML=cats.filter(k=>!q||norm(k.name).includes(q)).map(k=>`<label class="check"><input type="checkbox" data-fk="${k.id}" ${sel.has(k.id)?'checked':''}><span class="grow"><b>${esc(k.name)}</b>${where(k)?`<br><span style="color:var(--muted);font-size:13px">${esc(where(k))}</span>`:''}</span><span class="pill neutral num">${k.cardIds.filter(i=>byId(S.cards,i)).length}</span></label>`).join('')||'<div class="sub">Ничего не найдено</div>';
+      $('#fdN').textContent=sel.size};
+    if(list){clearable($('#fdSearch'));draw();
+      $('#fdSearch').addEventListener('input',draw);
+      list.addEventListener('change',e=>{const i=e.target.closest('[data-fk]');if(!i)return;i.checked?sel.add(i.dataset.fk):sel.delete(i.dataset.fk);$('#fdN').textContent=sel.size});
+      $('#fdAll').onclick=()=>{cats.forEach(k=>sel.add(k.id));draw()};
+      $('#fdNone').onclick=()=>{sel.clear();draw()};}
     $('#fdSave').onclick=async()=>{
       const name=$('#fdName').value.trim();if(!name){toast('Введите название');return}
-      if(f)f.name=name;else S.folders.push({id:uid(),name});
+      let fo=f;if(fo)fo.name=name;else{fo={id:uid(),name};S.folders.push(fo)}
+      const touched=[];
+      for(const k of S.cats){const has=inFolder(k,fo.id),want=sel.has(k.id);
+        if(has!==want){k.folderIds=want?[...fids(k),fo.id]:fids(k).filter(x=>x!==fo.id);delete k.folderId;touched.push(k)}}
+      if(touched.length)await dbPutMany('cats',touched);
       await saveFolders();closeSheet();toast('Сохранено');render();
     };
     const d=$('#fdDel');
     if(d)d.onclick=()=>{d.textContent='Точно удалить?';d.onclick=async()=>{
-      const touched=S.cats.filter(k=>k.folderId===f.id);touched.forEach(k=>delete k.folderId);
+      const touched=S.cats.filter(k=>inFolder(k,f.id));touched.forEach(k=>{k.folderIds=fids(k).filter(x=>x!==f.id);delete k.folderId});
       if(touched.length)await dbPutMany('cats',touched);
       S.folders=S.folders.filter(x=>x.id!==f.id);await saveFolders();closeSheet();toast('Папка удалена');render()}};
   },`<div class="row"><button class="btn grow" id="fdSave">Сохранить</button>${f?'<button class="btn danger" id="fdDel">Удалить</button>':''}</div>`);
@@ -617,12 +676,13 @@ function editCat(id,defFolder){
   const item=(c,mark,cls)=>`<button type="button" class="pi ${cls||''}" data-id="${c.id}"><span class="t"><b>${esc(c.front)}</b><span>${esc(c.back)}</span></span><span class="m">${mark}</span></button>`;
   openSheet(`<h2>${k?'Категория':'Новая категория'}</h2>
     <div><label class="f" for="cName">Название</label><input type="text" id="cName" value="${esc(k?.name||'')}" autocomplete="off"></div>
-    ${S.folders.length?`<div style="margin-top:10px"><label class="f" for="cFolder">Папка</label><select id="cFolder"><option value="">— без папки —</option>${S.folders.map(f=>`<option value="${f.id}" ${(k?k.folderId:defFolder)===f.id?'selected':''}>${esc(f.name)}</option>`).join('')}</select></div>`:''}
+    ${S.folders.length?`<div style="margin-top:10px"><div class="cap">Папки (можно несколько)</div><div class="row wrap" id="cFolders">${S.folders.map(f=>`<button type="button" class="chip" data-cf="${f.id}" aria-pressed="${k?inFolder(k,f.id):defFolder===f.id}">${esc(f.name)}</button>`).join('')}</div></div>`:''}
     <div class="two" style="margin-top:14px">
       <div><div class="cap">В категории: <span id="cN" class="num"></span></div><div class="plist" id="cLeft"></div></div>
       <div><div class="cap">Все слова: <span class="num">${S.cards.length}</span></div><input type="text" id="cSearch" placeholder="Поиск" autocomplete="off" style="margin-bottom:8px;padding:9px 12px"><div class="plist" id="cPool"></div></div>
     </div>`,(el)=>{
     clearable($('#cName'));clearable($('#cSearch'));
+    el.querySelectorAll('[data-cf]').forEach(b=>b.onclick=()=>b.setAttribute('aria-pressed',b.getAttribute('aria-pressed')!=='true'));
     const left=$('#cLeft'),pool=$('#cPool');
     const drawLeft=()=>{const st=left.scrollTop;const items=sorted.filter(c=>sel.has(c.id));
       left.innerHTML=items.length?items.map(c=>item(c,'✕')).join(''):'<div class="sub" style="margin:4px 2px">Пока пусто. Выберите слова справа.</div>';
@@ -640,7 +700,7 @@ function editCat(id,defFolder){
     $('#cSave').onclick=async()=>{
       const name=$('#cName').value.trim();if(!name){toast('Введите название');return}
       let cat=k;if(!cat){cat={id:uid(),name,cardIds:[]};S.cats.push(cat)}
-      cat.name=name;cat.cardIds=[...sel];const fs=$('#cFolder');if(fs){if(fs.value)cat.folderId=fs.value;else delete cat.folderId}await dbPut('cats',cat);closeSheet();toast('Сохранено');render();
+      cat.name=name;cat.cardIds=[...sel];const fs=$('#cFolders');if(fs){cat.folderIds=[...fs.querySelectorAll('[aria-pressed="true"]')].map(b=>b.dataset.cf);delete cat.folderId}else if(!cat.folderIds)cat.folderIds=[];await dbPut('cats',cat);closeSheet();toast('Сохранено');render();
     };
     const d=$('#cDel');
     if(d)d.onclick=()=>{d.textContent='Точно удалить?';d.onclick=async()=>{
@@ -652,7 +712,7 @@ function editCat(id,defFolder){
 const fmtDate=(iso)=>{try{return new Date(iso).toLocaleString('ru-RU',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return ''}};
 function buildBackup(){
   return {app:'kartochki',v:2,exported:new Date().toISOString(),cards:S.cards,cats:S.cats,folders:S.folders,events:S.events,cycle:S.cycle,dailyLog:S.dailyLog,
-    meta:{frontLang:S.meta.frontLang,count:S.meta.count,dailyRandom:S.meta.dailyRandom,dailyHard:S.meta.dailyHard,xp:S.meta.xp,boss:S.meta.boss,memBest:S.meta.memBest,sound:S.meta.sound,vibe:S.meta.vibe}};
+    meta:{frontLang:S.meta.frontLang,count:S.meta.count,dailyRandom:S.meta.dailyRandom,dailyHard:S.meta.dailyHard,xp:S.meta.xp,boss:S.meta.boss,memBest:S.meta.memBest,sound:S.meta.sound,vibe:S.meta.vibe,bossHp:S.meta.bossHp,bossAns:S.meta.bossAns,bossDir:S.meta.bossDir,dunHearts:S.meta.dunHearts,dun:S.meta.dun,fwBest:S.meta.fwBest}};
 }
 const backupName=()=>`kartochki-kopiya-${dayKey(Date.now())}.json`;
 function backupFile(){
@@ -693,7 +753,7 @@ async function mergeData(d){
   for(const ik of (d.cats||[])){if(!ik||!ik.id||!ik.name)continue;
     let lk=byId(S.cats,ik.id)||catByName.get(norm(ik.name));
     if(!lk){lk={id:ik.id,name:ik.name,cardIds:[]};S.cats.push(lk);catByName.set(norm(lk.name),lk);newCats++;catTouched.add(lk)}
-    if(!lk.folderId&&ik.folderId&&fmap.has(ik.folderId)){lk.folderId=fmap.get(ik.folderId);catTouched.add(lk)}
+    {const cur=fids(lk);if(!Array.isArray(lk.folderIds)){lk.folderIds=cur;delete lk.folderId}for(const f of fids(ik)){const m=fmap.get(f);if(m&&!lk.folderIds.includes(m)){lk.folderIds.push(m);catTouched.add(lk)}}}
     const have=new Set(lk.cardIds);
     for(const i of (ik.cardIds||[])){const m=idMap.get(i);if(m&&!have.has(m)){lk.cardIds.push(m);have.add(m);catTouched.add(lk)}}
   }
@@ -708,6 +768,8 @@ async function mergeData(d){
   if(d.meta&&d.meta.frontLang&&S.meta.frontLang==='Иностранный')S.meta.frontLang=d.meta.frontLang;
   if(d.meta){const dm=d.meta;S.meta.xp=Math.max(S.meta.xp||0,dm.xp||0);
     if(dm.boss&&typeof dm.boss==='object'){const B=(S.meta.boss=S.meta.boss||{});for(const [k,v] of Object.entries(dm.boss)){const id=idMap.get(k)||k,o=B[id]||(B[id]={w:0,l:0});o.w=Math.max(o.w,v.w||0);o.l=Math.max(o.l,v.l||0)}}
+    if(dm.dun&&typeof dm.dun==='object'){const o=(S.meta.dun=S.meta.dun||{wins:0,best:0});o.wins=Math.max(o.wins||0,dm.dun.wins||0);o.best=Math.max(o.best||0,dm.dun.best||0)}
+    if(dm.fwBest&&typeof dm.fwBest==='object'){const B=(S.meta.fwBest=S.meta.fwBest||{});for(const [k,v] of Object.entries(dm.fwBest)){if(!B[k]||(v&&v<B[k]))B[k]=v}}
     if(dm.memBest&&typeof dm.memBest==='object'){const B=(S.meta.memBest=S.meta.memBest||{});for(const [k,v] of Object.entries(dm.memBest)){if(!B[k]||(v&&v.t<B[k].t))B[k]=v}}}
   await dbPutMany('cards',[...newCards,...changed]);
   if(catTouched.size)await dbPutMany('cats',[...catTouched]);
@@ -719,13 +781,14 @@ async function mergeData(d){
 async function replaceData(d){
   await dbClear('cards');await dbClear('cats');await dbClear('events');
   await dbPutMany('cards',d.cards);await dbPutMany('cats',d.cats||[]);await dbPutMany('events',d.events||[]);
-  S.cards=d.cards;S.cats=d.cats||[];S.events=d.events||[];S.folders=Array.isArray(d.folders)?d.folders:[];await saveFolders();
+  S.cards=d.cards;S.cats=d.cats||[];{const ch=migrateCats(S.cats);if(ch.length)await dbPutMany('cats',ch)}S.events=d.events||[];S.folders=Array.isArray(d.folders)?d.folders:[];await saveFolders();
   S.cycle={classic:[],choice:[],write:[],chain:[],...(d.cycle||{})};await saveCycle();
   S.dailyLog=d.dailyLog&&typeof d.dailyLog==='object'?d.dailyLog:{};saveDailyLog();
   if(d.meta){S.meta={...S.meta,frontLang:d.meta.frontLang||S.meta.frontLang};if(typeof d.meta.count==='number'){S.meta.count=d.meta.count;S.setup.count=d.meta.count}
-    for(const k of ['dailyRandom','dailyHard','xp'])if(typeof d.meta[k]==='number')S.meta[k]=d.meta[k];
-    for(const k of ['boss','memBest'])if(d.meta[k]&&typeof d.meta[k]==='object')S.meta[k]=d.meta[k];
-    for(const k of ['sound','vibe'])if(typeof d.meta[k]==='boolean')S.meta[k]=d.meta[k]}
+    for(const k of ['dailyRandom','dailyHard','xp','bossHp','dunHearts'])if(typeof d.meta[k]==='number')S.meta[k]=d.meta[k];
+    for(const k of ['boss','memBest','dun','fwBest'])if(d.meta[k]&&typeof d.meta[k]==='object')S.meta[k]=d.meta[k];
+    for(const k of ['sound','vibe'])if(typeof d.meta[k]==='boolean')S.meta[k]=d.meta[k];
+    for(const k of ['bossAns','bossDir'])if(typeof d.meta[k]==='string')S.meta[k]=d.meta[k]}
   await dbPut('meta',{k:'meta',...S.meta});
 }
 async function readBackupFile(f){
@@ -834,7 +897,7 @@ function bindSetup(v){
   v.querySelectorAll('[data-sel]').forEach(i=>i.onchange=()=>{const id=i.dataset.sel;
     if(i.checked){if(id==='__all')T.sel.clear();else T.sel.delete('__all');T.sel.add(id)}else T.sel.delete(id);viewStudy()});
   v.querySelectorAll('[data-folder]').forEach(i=>i.onchange=()=>{T.sel.delete('__all');
-    S.cats.filter(k=>k.folderId===i.dataset.folder).forEach(k=>i.checked?T.sel.add(k.id):T.sel.delete(k.id));viewStudy()});
+    S.cats.filter(k=>inFolder(k,i.dataset.folder)).forEach(k=>i.checked?T.sel.add(k.id):T.sel.delete(k.id));viewStudy()});
   const setCount=(n)=>{T.count=n;S.meta.count=n;dbPut('meta',{k:'meta',...S.meta}).catch(()=>{})};
   v.querySelectorAll('[data-cnt]').forEach(b=>b.onclick=()=>{setCount(+b.dataset.cnt);viewStudy()});
   v.querySelector('#cnt').addEventListener('input',e=>{const n=parseInt(e.target.value,10);
@@ -1242,7 +1305,7 @@ const hash=(str)=>{let h=2166136261;for(const ch of String(str)){h^=ch.charCodeA
 function gameLeave(){clearInterval(gTimer);gTimer=null;const r=S.game.run;if(r&&r.running){r.acc+=Date.now()-r.t0;r.running=false}}
 function viewGames(){
   clearInterval(gTimer);gTimer=null;
-  const r=S.game.run;if(r&&r.kind==='mem'&&!r.done&&!r.running){r.running=true;r.t0=Date.now()}
+  const r=S.game.run;if(r&&(r.kind==='mem'||r.kind==='fw')&&!r.done&&!r.running){r.running=true;r.t0=Date.now()}
   const v=S.game.view,el=$('#view');
   if(v==='hub')hubView(el);
   else if(v==='memSetup')memSetupView(el);
@@ -1251,8 +1314,13 @@ function viewGames(){
   else if(v==='bossList')bossListView(el);
   else if(v==='fight')fightView(el);
   else if(v==='bossDone')bossDoneView(el);
+  else if(v==='dunMap')dunMapView(el);
+  else if(v==='dunEnd')dunEndView(el);
+  else if(v==='fwSetup')fwSetupView(el);
+  else if(v==='fw')fwRunView(el);
+  else if(v==='fwDone')fwDoneView(el);
 }
-const goG=(view)=>{S.game.view=view;viewGames();scrollTo(0,0)};
+const goG=(view)=>{S.game.view=view;if(S.tab==='games'){viewGames();scrollTo(0,0)}};
 function hubView(el){
   const L=levelOf(S.meta.xp),pct=Math.round(L.cur/L.need*100);
   el.innerHTML=`<div class="card"><div class="row"><div class="lvl">${L.l}</div><div class="grow"><b>Уровень ${L.l}</b><div class="sub" style="margin:0"><span class="num">${L.cur}</span> из <span class="num">${L.need}</span> опыта до следующего</div>
@@ -1260,22 +1328,26 @@ function hubView(el){
     <div class="row wrap" style="margin-top:12px"><button class="chip" id="tSound" aria-pressed="${S.meta.sound!==false}">${S.meta.sound!==false?"Звук: вкл":"Звук: выкл"}</button><button class="chip" id="tVibe" aria-pressed="${S.meta.vibe!==false}">${S.meta.vibe!==false?"Вибрация: вкл":"Вибрация: выкл"}</button></div></div>
     <div class="stack" style="margin-top:14px">
       <button class="gcard" id="gMem"><span class="gic">${memIcon()}</span><span class="grow"><b>Мемори</b><span>Соединяйте слово с его переводом. Размер поля подстраивается под экран.</span></span></button>
-      <button class="gcard" id="gBoss"><span class="gic">${bossSvg('hub',{})}</span><span class="grow"><b>Босс</b><span>Каждая категория это монстр. Верные ответы бьют по нему, ошибки стоят сердечек.</span></span></button></div>
+      <button class="gcard" id="gFw"><span class="gic">${fwIcon()}</span><span class="grow"><b>Филворд</b><span>Найдите японские слова в сетке по их переводам. Классический или «Найди слова».</span></span></button>
+      <button class="gcard" id="gBoss"><span class="gic">${bossSvg('hub',{})}</span><span class="grow"><b>Босс</b><span>Каждая категория это монстр. Можно сразиться с одним или пройти данж из нескольких этажей.</span></span></button></div>
     <div class="sub" style="margin:14px 2px 0">Ответы в играх попадают в статистику так же, как в обычных режимах.</div>`;
   $('#tSound').onclick=()=>{S.meta.sound=!(S.meta.sound!==false);saveMeta();if(S.meta.sound)sfx('ok');hubView(el)};
   $('#tVibe').onclick=()=>{S.meta.vibe=!(S.meta.vibe!==false);saveMeta();if(S.meta.vibe)buzz(40);hubView(el)};
-  $('#gMem').onclick=()=>goG('memSetup');$('#gBoss').onclick=()=>goG('bossList');
+  $('#gMem').onclick=()=>goG('memSetup');$('#gFw').onclick=()=>goG('fwSetup');$('#gBoss').onclick=()=>goG('bossList');
 }
 function memIcon(){return `<svg viewBox="0 0 64 64" width="56" height="56"><rect x="6" y="10" width="24" height="30" rx="7" fill="var(--accent)" opacity=".9"/><rect x="34" y="24" width="24" height="30" rx="7" fill="var(--accent2)" opacity=".9"/><path d="M30 28l6 6M30 34l6-6" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>`}
 
 /* ---------- Мемори ---------- */
+/* масштаб поля хранится на каждом устройстве отдельно */
+const memZ=()=>{try{const v=parseFloat(localStorage.getItem('memZoom'));if(v>0)return v}catch(e){}return innerWidth>=900?1.4:1};
+const setMemZ=(v)=>{try{localStorage.setItem('memZoom',String(v))}catch(e){}};
 function memGrid(pairs){
-  const w=Math.max(260,($('#view')?.clientWidth||innerWidth-32)),gap=8,minT=96;
+  const w=Math.max(260,($('#view')?.clientWidth||innerWidth-32)),gap=8,minT=96*Math.min(memZ(),1.6);
   const cols=Math.max(3,Math.min(6,Math.floor((w+gap)/(minT+gap))));
   return cols;
 }
 function memAutoPairs(){
-  const cols=memGrid(),gap=8,availH=Math.max(260,innerHeight-250),rows=Math.max(3,Math.floor((availH+gap)/(84+gap)));
+  const cols=memGrid(),gap=8,availH=Math.max(260,innerHeight-250),rows=Math.max(3,Math.floor((availH+gap)/(84*memZ()+gap)));
   return Math.max(4,Math.min(12,Math.floor(cols*rows/2)));
 }
 function memPairsCount(){return S.gsize==='auto'?memAutoPairs():S.gsize}
@@ -1309,11 +1381,14 @@ function memStart(){
 }
 const memElapsed=()=>{const r=S.game.run;return r.acc+(r.running?Date.now()-r.t0:0)};
 function memRunView(el){
-  const r=S.game.run;
-  el.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="chip" id="gQuit">✕ Выйти</button><div class="grow"></div>
-      <span class="hud num" id="hTime">0:00</span><span class="hud num" id="hMist"></span><span class="hud num" id="hPairs"></span></div>
-    <div class="mem-grid" id="grid" style="grid-template-columns:repeat(${r.cols},minmax(0,1fr))">${r.tiles.map((t,i)=>`<button class="tile ${t.side}" data-i="${i}"><span>${esc(t.text)}</span></button>`).join('')}</div>`;
-  el.querySelectorAll('.tile').forEach((b,i)=>{const L=r.tiles[i].text.length;b.style.fontSize=L>16?'13px':L>9?'15px':'18px';paintTile(i)});
+  const r=S.game.run;clearInterval(gTimer);
+  el.innerHTML=`<div class="row wrap" style="margin-bottom:10px;gap:6px"><button class="chip" id="gQuit">✕ Выйти</button><div class="grow"></div>
+      <span class="hud num" id="hTime">0:00</span><span class="zoom"><button class="chip" id="zOut" aria-label="Уменьшить">−</button><span class="num" id="zVal"></span><button class="chip" id="zIn" aria-label="Увеличить">＋</button></span><span class="hud num" id="hMist"></span><span class="hud num" id="hPairs"></span></div>
+    <div class="mem-grid" id="grid" style="grid-template-columns:repeat(${r.cols},minmax(0,1fr));--z:${memZ()}">${r.tiles.map((t,i)=>`<button class="tile ${t.side}" data-i="${i}"><span>${esc(t.text)}</span></button>`).join('')}</div>`;
+  el.querySelectorAll('.tile').forEach((b,i)=>{const L=r.tiles[i].text.length;b.style.fontSize=`calc(${L>16?13:L>9?15:18}px * var(--z))`;paintTile(i)});
+  $('#zVal').textContent=Math.round(memZ()*100)+'%';
+  const zoom=(d)=>{const z=Math.round(Math.max(.7,Math.min(2.4,memZ()+d))*10)/10;setMemZ(z);r.cols=memGrid();memRunView(el)};
+  $('#zOut').onclick=()=>zoom(-.1);$('#zIn').onclick=()=>zoom(.1);
   hud();
   gTimer=setInterval(()=>{if(S.tab==='games'&&S.game.view==='mem'&&!r.done&&r.running)$('#hTime')&&($('#hTime').textContent=fmtTime(memElapsed()))},400);
   $('#gQuit').onclick=()=>{S.game.run=null;goG('hub')};
@@ -1360,10 +1435,14 @@ function memDoneView(el){
 }
 const starSvg=(on)=>`<svg viewBox="0 0 24 24" width="44" height="44"><path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z" fill="${on?'#f6b73c':'var(--surface2)'}" stroke="${on?'#e59a12':'var(--line)'}" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
 
-/* ---------- Босс ---------- */
-S.bossHp=15;S.bossDir='mix';
+/* ---------- Босс и данж ---------- */
 const BOSS_NICK=['Ворчун','Булькун','Хмурик','Пыхтелка','Лопоух','Зубастик','Тучка','Кляксик','Гремлик','Мямлик'];
-const bossNick=(seed)=>BOSS_NICK[hash(seed)%BOSS_NICK.length];
+const bossNick=(seed)=>seed==='__dunmix'?'Повелитель данжа':BOSS_NICK[hash(seed)%BOSS_NICK.length];
+S.bossMode='one';S.dunSel=new Set();S.dunFinal='__mix';
+const bossHpN=()=>Math.max(1,Math.floor(S.meta.bossHp||15));
+const dunHeartsN=()=>Math.max(1,Math.floor(S.meta.dunHearts||5));
+const bossAnsMode=()=>S.meta.bossAns==='write'?'write':'choice';
+const bossDir=()=>S.meta.bossDir||'mix';
 /* рисованный монстр: внешность зависит от названия категории */
 function bossSvg(seed,o){
   o=o||{};const h=hash(seed),hue=h%360,st=o.state||'idle';
@@ -1382,93 +1461,160 @@ function bossSvg(seed,o){
     :st==='dead'?`<path d="M62 118 Q71 110 80 118 T98 118" fill="none" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`
     :`<path d="M64 112 Q80 126 96 112" fill="none" stroke="${dark}" stroke-width="4" stroke-linecap="round"/>`;
   return `<svg class="boss-svg" viewBox="0 0 160 160" aria-hidden="true"><g fill="${body}" stroke="${dark}" stroke-width="4" stroke-linejoin="round">${shapeP}</g>${accP}
-    <ellipse cx="80" cy="128" rx="28" ry="12" fill="${belly}" opacity=".7"/>${pos.map(eye).join('')}${mouth}</svg>`;
+    <ellipse cx="80" cy="128" rx="28" ry="12" fill="${belly}" opacity=".7"/>${pos.map(eye).join('')}${mouth}${o.crown?`<path d="M50 34 L56 8 L70 24 L80 4 L90 24 L104 8 L110 34Z" fill="#f6c453" stroke="#b8862a" stroke-width="3" stroke-linejoin="round"/><circle cx="80" cy="26" r="4" fill="#e5484d"/>`:''}</svg>`;
 }
 const heartSvg=(on)=>`<svg viewBox="0 0 24 24" width="26" height="26"><path d="M12 21s-8-5.2-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.8-8 11-8 11z" fill="${on?'var(--bad)':'var(--surface2)'}" stroke="${on?'var(--bad)':'var(--line)'}" stroke-width="1.6" stroke-linejoin="round"/></svg>`;
 const bossRec=(id)=>(S.meta.boss&&S.meta.boss[id])||{w:0,l:0};
+const catCards=(id)=>{if(id==='__all')return S.cards.filter(c=>!c.stop);const k=byId(S.cats,id);return k?k.cardIds.map(i=>byId(S.cards,i)).filter(c=>c&&!c.stop):[]};
+const catName=(id)=>id==='__all'?'Все слова':id==='__dunmix'?'Смесь всех этажей':(byId(S.cats,id)||{name:'?'}).name;
+const heartsHtml=(n,max)=>Array.from({length:max},(_,i)=>heartSvg(i<n)).join('');
+
 function bossListView(el){
+  const dun=S.bossMode==='dun',seen=new Set();
   const groups=groupedCats().filter(g=>g.cats.length),multi=S.folders.length>0;
-  const cnt=(k)=>k.cardIds.map(i=>byId(S.cards,i)).filter(c=>c&&!c.stop).length;
-  const card=(id,name,n)=>{const r=bossRec(id);
-    return `<button class="bcard" data-b="${esc(id)}" ${n?'':'disabled'}><span class="bav">${bossSvg(id)}</span><span class="grow"><b>${esc(name)}</b><span>${esc(bossNick(id))} · слов: ${n}${r.w?` · побед: ${r.w}`:''}</span></span></button>`};
-  const list=groups.map(g=>{const r=g.cats.map(k=>card(k.id,k.name,cnt(k))).join('');
+  const card=(id,name,n)=>{const r=bossRec(id),on=dun&&S.dunSel.has(id);
+    return `<button class="bcard${on?' on':''}" data-b="${esc(id)}" ${n?'':'disabled'}>${dun?`<span class="bchk">${on?'✓':''}</span>`:''}<span class="bav">${bossSvg(id)}</span><span class="grow"><b>${esc(name)}</b><span>${esc(bossNick(id))} · слов: ${n}${r.w?` · побед: ${r.w}`:''}</span></span></button>`};
+  const list=groups.map(g=>{const r=g.cats.map(k=>card(k.id,k.name,catCards(k.id).length)).join('');
     return (g.folder?`<div class="cap" style="margin:10px 2px 0">${esc(g.folder.name)}</div>`:(multi?'<div class="cap" style="margin:10px 2px 0">Без папки</div>':''))+`<div class="bgrid">${r}</div>`}).join('');
+  const hp=bossHpN(),presets=[10,20,30,50];
+  const finals=[['__mix','Смесь всех этажей'],['__all','Все слова'],...S.cats.map(k=>[k.id,k.name])];
+  const floors=[...S.dunSel].filter(id=>id!==S.dunFinal&&catCards(id).length);
+  const rec=S.meta.dun||{};
   el.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="chip" id="gBack">← Игры</button></div><h2>Босс</h2>
-    <div class="sub">Выберите монстра. Верный ответ бьёт по нему, серия из трёх подряд усиливает удар. Три ошибки, и вы проиграли.</div>
-    <div class="cap">Здоровье босса (число вопросов)</div>
-    <div class="row wrap">${[10,15,20].map(n=>`<button class="chip" data-hp="${n}" aria-pressed="${S.bossHp===n}">${n}</button>`).join('')}</div>
+    <div class="row wrap"><button class="chip" data-bm="one" aria-pressed="${!dun}">Один босс</button><button class="chip" data-bm="dun" aria-pressed="${dun}">Данж</button></div>
+    <div class="sub" style="margin-top:8px">${dun?'Отметьте категории: каждая станет этажом, порядок этажей случайный. Финальный босс всегда последний, и здоровья у него втрое больше. Сердечки общие на весь данж, по пути встречаются родники, которые их восстанавливают.':'Выберите монстра. Верный ответ бьёт по нему, серия из трёх подряд усиливает удар. Кончились сердечки, и вы проиграли.'}</div>
+    <div class="cap" style="margin-top:12px">Как отвечать</div>
+    <div class="row wrap"><button class="chip" data-ba="choice" aria-pressed="${bossAnsMode()==='choice'}">Выбор ответа</button><button class="chip" data-ba="write" aria-pressed="${bossAnsMode()==='write'}">Письмо</button></div>
     <div class="cap" style="margin-top:12px">Что показывать</div>
-    <div class="row wrap">${[['f',`${esc(S.meta.frontLang)} → русский`],['b',`Русский → ${esc(S.meta.frontLang)}`],['mix','Вперемешку']].map(([k,n])=>`<button class="chip" data-dir="${k}" aria-pressed="${S.bossDir===k}">${n}</button>`).join('')}</div>
+    <div class="row wrap">${[['f',`${esc(S.meta.frontLang)} → русский`],['b',`Русский → ${esc(S.meta.frontLang)}`],['mix','Вперемешку']].map(([k,n])=>`<button class="chip" data-dir="${k}" aria-pressed="${bossDir()===k}">${n}</button>`).join('')}</div>
+    <div class="cap" style="margin-top:12px">Здоровье ${dun?'каждого босса':'босса'}</div>
+    <div class="row wrap" style="align-items:center">${presets.map(n=>`<button class="chip" data-hp="${n}" aria-pressed="${hp===n}">${n}</button>`).join('')}
+      <label class="row" style="gap:6px"><span style="font-weight:700;color:var(--muted)">своё</span><input type="text" inputmode="numeric" id="hpIn" class="cnt" value="${hp}" autocomplete="off" aria-label="Своё здоровье босса"></label></div>
+    ${dun?`<div class="cap" style="margin-top:12px">Сердечек на весь данж</div>
+    <div class="row" style="gap:8px;align-items:center"><input type="text" inputmode="numeric" id="htIn" class="cnt" value="${dunHeartsN()}" autocomplete="off" aria-label="Сердечек на данж"><span class="sub" style="margin:0">${rec.wins?`Данжей пройдено: ${rec.wins}. `:''}${rec.best?`Рекорд: ${rec.best} эт.`:''}</span></div>
+    <div class="cap" style="margin-top:12px">Финальный босс</div>
+    <select id="dFinal">${finals.map(([k,n])=>`<option value="${esc(k)}" ${S.dunFinal===k?'selected':''}>${esc(n)}</option>`).join('')}</select>`:''}
     <div id="gMsg" class="sub" style="margin:10px 0 0"></div>
-    <div class="bgrid" style="margin-top:8px">${card('__all','Все слова',S.cards.filter(c=>!c.stop).length)}</div>${list}`;
+    ${dun?`<button class="btn block" id="dGo" style="margin-top:6px" ${floors.length?'':'disabled'}>Собрать данж${floors.length?` (этажей: ${floors.length} + финал)`:''}</button>`:''}
+    ${dun?'':`<div class="bgrid" style="margin-top:8px">${card('__all','Все слова',S.cards.filter(c=>!c.stop).length)}</div>`}${list}`;
   $('#gBack').onclick=()=>goG('hub');
-  el.querySelectorAll('[data-hp]').forEach(b=>b.onclick=()=>{S.bossHp=+b.dataset.hp;bossListView(el)});
-  el.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>{S.bossDir=b.dataset.dir;bossListView(el)});
-  el.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>bossStart(b.dataset.b));
+  el.querySelectorAll('[data-bm]').forEach(b=>b.onclick=()=>{S.bossMode=b.dataset.bm;bossListView(el)});
+  el.querySelectorAll('[data-ba]').forEach(b=>b.onclick=()=>{S.meta.bossAns=b.dataset.ba;saveMeta();bossListView(el)});
+  el.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>{S.meta.bossDir=b.dataset.dir;saveMeta();bossListView(el)});
+  el.querySelectorAll('[data-hp]').forEach(b=>b.onclick=()=>{S.meta.bossHp=+b.dataset.hp;saveMeta();bossListView(el)});
+  const num=(sel,key)=>{const i=$(sel);if(i)i.addEventListener('change',()=>{const n=parseInt(i.value,10);if(n>0){S.meta[key]=n;saveMeta()}bossListView(el)})};
+  num('#hpIn','bossHp');num('#htIn','dunHearts');
+  const fs=$('#dFinal');if(fs)fs.onchange=()=>{S.dunFinal=fs.value;bossListView(el)};
+  el.querySelectorAll('[data-b]').forEach(b=>b.onclick=()=>{const id=b.dataset.b;
+    if(!dun)return bossStart(id);
+    S.dunSel.has(id)?S.dunSel.delete(id):S.dunSel.add(id);const y=scrollY;bossListView(el);scrollTo(0,y)});
+  const go=$('#dGo');if(go)go.onclick=()=>dunStart(floors);
 }
-function bossStart(id){
-  const k=id==='__all'?null:byId(S.cats,id),name=k?k.name:'Все слова';
-  const cards=k?k.cardIds.map(i=>byId(S.cards,i)).filter(c=>c&&!c.stop):S.cards.filter(c=>!c.stop);
-  if(!cards.length)return;
-  if(S.cards.length<3){const m=$('#gMsg');if(m)m.textContent='Для боя нужно хотя бы 3 карточки в пуле.';return}
-  const picks=pickWords(cards,Math.min(S.bossHp,cards.length)),queue=[];
-  while(queue.length<S.bossHp*2){const b=shuffle(picks);if(queue.length&&b.length>1&&b[0].id===queue[queue.length-1].id)b.push(b.shift());queue.push(...b)}
-  S.game.run={kind:'boss',id,name,hp:S.bossHp,max:S.bossHp,hearts:3,combo:0,best:0,queue,qi:0,wrong:[],answers:0,cur:null,answered:false,state:'idle',won:null,gained:0,running:false,acc:0};
-  bossAsk();S.game.view='fight';viewGames();
+
+/* ---------- бой ---------- */
+function makeQueue(cards,hp){
+  const picks=pickWords(cards,Math.min(hp,cards.length)),queue=[];
+  while(queue.length<hp*2){const b=shuffle(picks);if(queue.length&&b.length>1&&b[0].id===queue[queue.length-1].id)b.push(b.shift());queue.push(...b)}
+  return queue;
+}
+function bossStart(id,dunNode){
+  const cards=id==='__dunmix'?dunMixCards():catCards(id);
+  const msg=(t)=>{const m=$('#gMsg');if(m)m.textContent=t;else toast(t)};
+  if(!cards.length)return msg('В этой категории нет слов.');
+  if(bossAnsMode()==='choice'&&S.cards.length<3)return msg('Для боя с выбором ответа нужно хотя бы 3 карточки в пуле.');
+  const D=S.game.dun,final=dunNode&&dunNode.type==='final',hp=final?bossHpN()*3:bossHpN();
+  S.game.run={kind:'boss',id,name:catName(id),hp,max:hp,hearts:D&&dunNode?D.hearts:3,maxHearts:D&&dunNode?D.maxHearts:3,crown:!!final,
+    combo:0,best:0,queue:makeQueue(cards,hp),qi:0,wrong:[],answers:0,cur:null,answered:false,state:'idle',won:null,gained:0,dun:!!dunNode,ans:bossAnsMode()};
+  bossAsk();S.game.view='fight';viewGames();scrollTo(0,0);
 }
 function bossAsk(){
-  const r=S.game.run,c=r.queue[r.qi],dir=S.bossDir==='mix'?(Math.random()<.5?'f':'b'):S.bossDir;
+  const r=S.game.run;if(r.qi>=r.queue.length)r.queue.push(...shuffle(r.queue.slice(0,Math.max(4,r.max))));
+  const c=r.queue[r.qi],dir=bossDir()==='mix'?(Math.random()<.5?'f':'b'):bossDir();
   const ans=(x)=>dir==='f'?x.back:x.front,seen=new Set([norm(ans(c))]),pool=[];
   for(const x of shuffle(S.cards)){const k=norm(ans(x));if(!seen.has(k)){seen.add(k);pool.push(x);if(pool.length>=3)break}}
-  r.cur={card:c,dir,ans,options:shuffle([c,...pool])};r.answered=false;
+  r.cur={card:c,dir,ans,options:shuffle([c,...pool]),hint:0,typed:''};r.answered=false;r.fb='';
 }
 function fightView(el){
-  const r=S.game.run,q=r.cur,c=q.card,show=q.dir==='f'?c.front:c.back,lang=q.dir==='f'?S.meta.frontLang:'Русский';
-  el.innerHTML=`<div class="row" style="margin-bottom:8px"><button class="chip" id="gQuit">✕ Сдаться</button><div class="grow"></div><span class="hearts" id="hearts"></span></div>
-    <div class="fight"><div class="bwrap"><div class="bname"><b>${esc(r.name)}</b><span>${esc(bossNick(r.id))}</span></div>
+  const r=S.game.run,q=r.cur,c=q.card,show=q.dir==='f'?c.front:c.back,lang=q.dir==='f'?S.meta.frontLang:'Русский',ansLang=q.dir==='f'?'Русский':S.meta.frontLang;
+  const D=r.dun&&S.game.dun;
+  const body=r.ans==='write'?`<div class="stack"><input type="text" id="bIn" placeholder="Ваш ответ (${esc(ansLang)})" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false">
+      <div id="hintBox" class="feedback" style="background:var(--surface2);color:var(--fg);font-size:22px;letter-spacing:.12em;text-align:center" hidden></div>
+      <div class="row"><button class="btn soft grow" id="bHint">Подсказка</button><button class="btn soft grow" id="bDont">Не знаю</button></div>
+      <button class="btn block" id="bChk">Ударить</button></div>`
+    :`<div class="stack" id="opts">${q.options.map((o,n)=>`<button class="opt" data-o="${n}">${esc(q.ans(o))}</button>`).join('')}</div>`;
+  el.innerHTML=`<div class="row" style="margin-bottom:8px"><button class="chip" id="gQuit">✕ Сдаться</button>${D?`<span class="hud num" style="margin-left:6px">${D.label}</span>`:''}<div class="grow"></div><span class="hearts" id="hearts"></span></div>
+    <div class="fight"><div class="bwrap"><div class="bname"><b>${r.crown?'♛ ':''}${esc(r.name)}</b><span>${esc(bossNick(r.id))}</span></div>
       <div class="hpbar"><i id="hpFill"></i><span class="num" id="hpTxt"></span></div>
-      <div class="boss" id="boss"></div><div class="dmg" id="dmg"></div></div>
+      <div class="boss${r.crown?' big':''}" id="boss"></div><div class="dmg" id="dmg"></div></div>
     <div class="bq"><div class="combo" id="combo"></div>
       <div class="q" style="margin:8px 0 12px"><span class="lang">${esc(lang)}</span><div class="txt">${esc(show)}</div></div>
-      <div class="stack" id="opts">${q.options.map((o,n)=>`<button class="opt" data-o="${n}">${esc(q.ans(o))}</button>`).join('')}</div><div id="fb" style="margin-top:10px"></div></div></div>`;
+      ${body}<div id="fb" style="margin-top:10px"></div></div></div>`;
   paintFight();
-  $('#gQuit').onclick=()=>{S.game.run=null;goG('bossList')};
-  $('#opts').onclick=(e)=>{const b=e.target.closest('.opt');if(b)bossAnswer(+b.dataset.o)};
+  const qb=$('#gQuit');qb.onclick=()=>{qb.textContent='Точно сдаться?';qb.onclick=()=>{if(r.dun){r.won=false;bossRecord(false);dunLose()}else{S.game.run=null;goG('bossList')}}};
+  if(r.ans==='write')bindBossWrite(r);
+  else $('#opts').onclick=(e)=>{const b=e.target.closest('.opt');if(b)bossAnswer({pick:+b.dataset.o})};
+  if(r.answered&&r.fb)showWrongFb(r);   /* вернулись во вкладку после ошибки */
+}
+function bindBossWrite(r){
+  const q=r.cur,inp=$('#bIn'),chars=Array.from(splitVariants(q.ans(q.card))[0]||q.ans(q.card)),maxHint=Math.min(2,chars.length-1);
+  inp.value=q.typed||'';inp.addEventListener('input',()=>{q.typed=inp.value});
+  const showHint=()=>{const b=$('#hintBox');if(q.hint>0){b.hidden=false;b.textContent=chars.map((ch,i)=>i<q.hint?ch:(ch===' '?' ':'＿')).join('')}
+    $('#bHint').textContent=maxHint>0?`Подсказка (${q.hint}/${maxHint})`:'Подсказка'};
+  showHint();if(!r.answered)setTimeout(()=>inp.focus(),60);
+  $('#bHint').onclick=()=>{if(r.answered)return;if(maxHint<1)return toast('Слово слишком короткое для подсказки');if(q.hint>=maxHint)return toast('Больше подсказок нет');q.hint++;showHint();inp.focus()};
+  $('#bDont').onclick=()=>{if(!r.answered)bossAnswer({dont:true})};
+  const go=()=>{if(r.answered)return;const v=norm(inp.value);if(!v)return toast('Введите ответ или нажмите «Не знаю»');
+    const a=q.ans(q.card);bossAnswer({good:v===norm(a)||variantKeys(a).includes(v)})};
+  $('#bChk').onclick=go;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!isIME(e)){e.preventDefault();go()}});
 }
 function paintFight(state){
   const r=S.game.run;r.state=state||r.state;
-  $('#boss').innerHTML=bossSvg(r.id,{state:r.state});$('#boss').className='boss '+(r.state==='hit'?'hit':r.state==='dead'?'dead':'');
-  $('#hearts').innerHTML=[0,1,2].map(i=>heartSvg(i<r.hearts)).join('');
+  $('#boss').innerHTML=bossSvg(r.id,{state:r.state,crown:r.crown});$('#boss').className='boss'+(r.crown?' big':'')+(r.state==='hit'?' hit':r.state==='dead'?' dead':'');
+  $('#hearts').innerHTML=heartsHtml(r.hearts,r.maxHearts);
   $('#hpFill').style.width=Math.round(r.hp/r.max*100)+'%';$('#hpTxt').textContent=r.hp+' / '+r.max;
   $('#combo').textContent=r.combo>=2?`Серия ×${r.combo}${r.combo>=3?' · усиленный удар':''}`:'';
 }
-async function bossAnswer(n){
-  const r=S.game.run,q=r.cur;if(r.answered)return;r.answered=true;r.answers++;
-  const picked=q.options[n],c=q.card,good=picked.id===c.id||norm(q.ans(picked))===norm(q.ans(c));
-  $('#opts').querySelectorAll('.opt').forEach((el,k)=>{const o=q.options[k];
-    if(o.id===c.id||norm(q.ans(o))===norm(q.ans(c)))el.classList.add('right');else if(k===n)el.classList.add('wrong')});
+function lockFight(){document.querySelectorAll('#bIn,#bHint,#bDont,#bChk').forEach(x=>{x.disabled=true;if(x.id!=='bIn')x.style.opacity=.45})}
+function showWrongFb(r){
+  $('#fb').innerHTML=r.fb+(r.hearts>0?'<button class="btn block" id="nx" style="margin-top:10px">Дальше</button>':'');lockFight();
+  const q=r.cur;const o=$('#opts');if(o)o.querySelectorAll('.opt').forEach((el,k)=>{const x=q.options[k];if(x.id===q.card.id||norm(q.ans(x))===norm(q.ans(q.card)))el.classList.add('right');else if(k===q.picked)el.classList.add('wrong')});
+  const nx=$('#nx');if(nx){nx.onclick=()=>{r.qi++;bossAsk();fightView($('#view'))};nx.focus()}
+}
+function bossAnswer(a){
+  const r=S.game.run,q=r.cur,c=q.card;if(r.answered)return;r.answered=true;r.answers++;
+  let good;
+  if(a.pick!=null){q.picked=a.pick;const p=q.options[a.pick];good=p.id===c.id||norm(q.ans(p))===norm(q.ans(c));
+    $('#opts').querySelectorAll('.opt').forEach((el,k)=>{const o=q.options[k];if(o.id===c.id||norm(q.ans(o))===norm(q.ans(c)))el.classList.add('right');else if(k===a.pick)el.classList.add('wrong')})}
+  else good=!a.dont&&a.good;
   logEvent(c.id,good?'ok':'bad');
   if(good){
-    r.combo++;r.best=Math.max(r.best,r.combo);const dmg=1+(r.combo>=3?1:0)+(r.combo>=6?1:0);
-    r.hp=Math.max(0,r.hp-dmg);addXp(2);r.gained+=2;sfx('hit');buzz(25);paintFight('hit');
+    const hinted=q.hint>0;let dmg;
+    if(hinted)dmg=1;   /* с подсказкой удар слабый, серия не растёт, но и не сбрасывается */
+    else{r.combo++;r.best=Math.max(r.best,r.combo);dmg=1+(r.combo>=3?1:0)+(r.combo>=6?1:0)}
+    r.hp=Math.max(0,r.hp-dmg);addXp(hinted?1:2);r.gained+=hinted?1:2;sfx('hit');buzz(25);lockFight();paintFight('hit');
+    if(r.ans==='write')$('#fb').innerHTML=`<div class="feedback ok">✓ ${esc(q.ans(c))}${hinted?' · с подсказкой':''}</div>`;
     const d=$('#dmg');d.textContent='−'+dmg;d.classList.remove('go');void d.offsetWidth;d.classList.add('go');
     if(r.hp<=0){setTimeout(()=>bossEnd(true),750);return}
-    setTimeout(()=>{if(S.game.run===r&&S.game.view==='fight'){paintFight('idle')}},320);
-    setTimeout(()=>{if(S.game.run===r&&S.game.view==='fight'){r.qi++;bossAsk();fightView($('#view'))}},800);
+    setTimeout(()=>{if(S.game.run===r&&S.game.view==='fight'&&$('#boss'))paintFight('idle')},320);
+    setTimeout(()=>{if(S.game.run===r&&S.game.view==='fight'&&S.tab==='games'){r.qi++;bossAsk();fightView($('#view'))}else if(S.game.run===r){r.qi++;bossAsk()}},r.ans==='write'?1000:800);
   }else{
     r.combo=0;r.hearts--;if(!r.wrong.includes(c))r.wrong.push(c);
-    r.queue.splice(Math.min(r.qi+4,r.queue.length),0,c);   /* вернётся через несколько вопросов */
+    r.queue.splice(Math.min(r.qi+4,r.queue.length),0,c);   /* слово вернётся через несколько вопросов */
     sfx('bad');buzz([60,40,60]);paintFight('grin');
-    $('#fb').innerHTML=`<div class="feedback bad">✗ Правильно: ${esc(q.ans(c))}</div>`+(r.hearts>0?'<button class="btn block" id="nx" style="margin-top:10px">Дальше</button>':'');
-    if(r.hearts<=0){setTimeout(()=>bossEnd(false),1100);return}
-    $('#nx').onclick=()=>{r.qi++;bossAsk();fightView($('#view'))};$('#nx').focus();
+    r.fb=`<div class="feedback bad">✗ Правильно: ${esc(q.ans(c))}</div>`;showWrongFb(r);
+    if(r.hearts<=0)setTimeout(()=>bossEnd(false),1100);
   }
 }
+function bossRecord(won){const rec=(S.meta.boss=S.meta.boss||{}),r=S.game.run;if(r.id==='__dunmix')return;const b=rec[r.id]||(rec[r.id]={w:0,l:0});won?b.w++:b.l++}
 function bossEnd(won){
-  const r=S.game.run;if(!r||S.game.view!=='fight')return;
-  r.won=won;const rec=(S.meta.boss=S.meta.boss||{});const b=rec[r.id]||(rec[r.id]={w:0,l:0});
-  if(won){b.w++;const bonus=15+r.hearts*5;addXp(bonus);r.gained+=bonus;sfx('win');buzz([40,30,40,30,90])}else{b.l++;sfx('lose')}
-  saveMeta();goG('bossDone');
+  const r=S.game.run;if(!r||r.won!==null)return;
+  r.won=won;bossRecord(won);
+  if(won){const bonus=15+r.hearts*5+(r.crown?40:0);addXp(bonus);r.gained+=bonus;sfx('win');buzz([40,30,40,30,90])}else sfx('lose');
+  saveMeta();
+  if(r.dun){const D=S.game.dun;D.hearts=r.hearts;D.xp+=r.gained;D.answers+=r.answers;r.wrong.forEach(c=>{if(!D.wrong.includes(c))D.wrong.push(c)});
+    if(won)dunWin();else dunLose();return}
+  goG('bossDone');
 }
 function bossDoneView(el){
   const r=S.game.run;
@@ -1476,10 +1622,264 @@ function bossDoneView(el){
     <div class="boss ${r.won?'dead':''}" style="margin:0 auto">${bossSvg(r.id,{state:r.won?'dead':'grin'})}</div>
     <div class="sub" style="margin:6px 0 10px">${r.won?`«${esc(r.name)}» повержен. `:`«${esc(r.name)}» устоял. `}Получено опыта: ${r.gained}.</div>
     <div class="kpi"><div class="card"><b class="num">${r.answers}</b><span>ответов</span></div><div class="card"><b class="num">×${r.best}</b><span>лучшая серия</span></div><div class="card"><b class="num" style="color:var(--bad)">${r.wrong.length}</b><span>слов с ошибкой</span></div></div></div>
-    ${r.wrong.length?`<h2 style="margin-top:18px">Стоит повторить</h2><div class="stack">${r.wrong.map(c=>`<div class="item"><div class="w"><b>${esc(c.front)}</b><span>${esc(c.back)}</span></div></div>`).join('')}</div>`:''}
+    ${wrongList(r.wrong)}
     <div class="stack" style="margin-top:16px"><button class="btn block" id="gAgain">Ещё бой</button><button class="btn soft block" id="gList">К боссам</button></div>`;
   $('#gAgain').onclick=()=>bossStart(r.id);$('#gList').onclick=()=>goG('bossList');
 }
+const wrongList=(w)=>w.length?`<h2 style="margin-top:18px">Стоит повторить</h2><div class="stack">${w.map(c=>`<div class="item"><div class="w"><b>${esc(c.front)}</b><span>${esc(c.back)}</span></div></div>`).join('')}</div>`:'';
+
+/* ---------- Данж ---------- */
+function dunMixCards(){const D=S.game.dun,ids=new Set();(D?D.floors:[]).forEach(f=>catCards(f).forEach(c=>ids.add(c.id)));return S.cards.filter(c=>ids.has(c.id))}
+function dunStart(floorIds){
+  if(!floorIds.length)return;
+  if(bossAnsMode()==='choice'&&S.cards.length<3){$('#gMsg').textContent='Для боя с выбором ответа нужно хотя бы 3 карточки в пуле.';return}
+  const floors=shuffle(floorIds),n=floors.length,springAt=new Set(n>=8?[Math.round(n/3),Math.round(2*n/3)]:n>=2?[Math.ceil(n/2)]:[]);
+  const nodes=[{type:'start'}];
+  floors.forEach((id,i)=>{nodes.push({type:'boss',id});if(springAt.has(i+1)&&i+1<n)nodes.push({type:'spring'})});
+  const fin=S.dunFinal==='__mix'?'__dunmix':S.dunFinal;
+  nodes.push({type:'final',id:fin});
+  const h=dunHeartsN();
+  S.game.dun={floors,nodes,pos:0,hearts:h,maxHearts:h,xp:0,answers:0,wrong:[],cleared:0,result:null,label:''};
+  S.game.run=null;goG('dunMap');
+}
+const dunTotal=()=>S.game.dun.nodes.filter(x=>x.type==='boss'||x.type==='final').length;
+function dunLayout(w,n){
+  const cols=Math.max(3,Math.min(6,Math.floor((w-16)/112))),cw=(w-16)/cols,rh=132;
+  const pts=[];for(let i=0;i<n;i++){const row=Math.floor(i/cols),c=i%cols,col=row%2?cols-1-c:c;pts.push({x:8+cw*(col+.5),y:62+row*rh})}
+  return {pts,h:62+Math.ceil(n/cols)*rh-40};
+}
+function dunMapView(el){
+  const D=S.game.dun;el.innerHTML='<div class="dmap" id="dmProbe"></div>';const w=Math.max(280,$('#dmProbe').clientWidth||innerWidth-32),L=dunLayout(w,D.nodes.length);
+  const next=D.nodes[D.pos+1],over=!!D.result;
+  const path=L.pts.map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+  const done=L.pts.slice(0,D.pos+1).map((p,i)=>(i?'L':'M')+p.x.toFixed(1)+' '+p.y.toFixed(1)).join(' ');
+  const node=(nd,i)=>{const p=L.pts[i],passed=i<=D.pos&&i>0,big=nd.type==='final';
+    const inner=nd.type==='start'?'<span class="dn-ico">⛩</span>':nd.type==='spring'?'<span class="dn-ico">💧</span>':bossSvg(nd.id,{crown:big,state:passed&&nd.type!=='spring'?'dead':'idle'});
+    const name=nd.type==='start'?'Вход':nd.type==='spring'?'Родник':catName(nd.id);
+    return `<div class="dn t-${nd.type}${passed?' passed':''}${i===D.pos+1&&!over?' next':''}" style="left:${p.x}px;top:${p.y}px"><div class="dn-c">${inner}${passed&&(nd.type==='boss'||nd.type==='final')?'<span class="dn-x">✕</span>':''}</div><div class="dn-n">${esc(name)}</div></div>`};
+  const cur=L.pts[D.pos];
+  const btn=over?'':next.type==='spring'?'К роднику':next.type==='final'?`На финального босса: ${esc(catName(next.id))}`:`В бой: ${esc(catName(next.id))}`;
+  el.innerHTML=`<div class="row" style="margin-bottom:8px"><button class="chip" id="dQuit">${over?'← К боссам':'✕ Покинуть данж'}</button><div class="grow"></div><span class="hearts">${heartsHtml(D.hearts,D.maxHearts)}</span></div>
+    <h2 style="margin-bottom:2px">Данж</h2><div class="sub" style="margin:0 0 6px">Повержено боссов: <b class="num">${D.cleared}</b> из <b class="num">${dunTotal()}</b></div>
+    <div class="dmap" style="height:${L.h}px"><svg class="dpath" width="${w}" height="${L.h}"><path d="${path}" class="dp-all"/><path d="${done}" class="dp-done"/></svg>
+      ${D.nodes.map(node).join('')}<div class="pawn" id="pawn" style="left:${cur.x}px;top:${cur.y}px"></div></div>
+    ${over?'':`<button class="btn block" id="dNext" style="margin-top:8px">${btn}</button>`}`;
+  const q=$('#dQuit');q.onclick=over?()=>goG('bossList'):()=>{q.textContent='Точно? Прогресс пропадёт';q.onclick=()=>{S.game.dun=null;goG('bossList')}};
+  const nb=$('#dNext');if(nb)nb.onclick=()=>{nb.disabled=true;
+    const p=L.pts[D.pos+1],pw=$('#pawn');pw.style.left=p.x+'px';pw.style.top=p.y+'px';sfx('pick');
+    setTimeout(()=>{D.pos++;const nd=D.nodes[D.pos];
+      if(nd.type==='spring'){const healed=D.maxHearts-D.hearts;D.hearts=D.maxHearts;sfx('ok');buzz(40);toast(healed?`Родник восстановил сердечки: +${healed}`:'Сердечки и так полные');dunMapView(el)}
+      else{D.label=nd.type==='final'?'Финал':`Этаж ${D.cleared+1}`;bossStart(nd.id,nd)}},650);
+  };
+  const pw=$('#pawn');if(pw)setTimeout(()=>pw.scrollIntoView({block:'center',behavior:'smooth'}),80);
+}
+function dunWin(){
+  const D=S.game.dun;D.cleared++;
+  const rec=(S.meta.dun=S.meta.dun||{wins:0,best:0});rec.best=Math.max(rec.best||0,D.cleared);
+  if(D.nodes[D.pos].type==='final'){D.result='win';rec.wins=(rec.wins||0)+1;saveMeta();goG('dunEnd');return}
+  saveMeta();setTimeout(()=>{if(S.game.dun===D)goG('dunMap')},700);
+}
+function dunLose(){
+  const D=S.game.dun;D.result='lose';D.hearts=0;
+  const rec=(S.meta.dun=S.meta.dun||{wins:0,best:0});rec.best=Math.max(rec.best||0,D.cleared);saveMeta();goG('dunEnd');
+}
+function dunEndView(el){
+  const D=S.game.dun,win=D.result==='win',rec=S.meta.dun||{};
+  el.innerHTML=`<h2>${win?'Данж пройден!':'Данж окончен'}</h2><div class="card" style="text-align:center">
+    <div class="boss ${win?'dead big':''}" style="margin:0 auto">${bossSvg(win?D.nodes[D.nodes.length-1].id:(D.nodes[D.pos].id||'x'),{state:win?'dead':'grin',crown:win})}</div>
+    <div class="sub" style="margin:6px 0 10px">${win?'Финальный босс повержен.':'Сердечки закончились.'} Повержено боссов: ${D.cleared} из ${dunTotal()}. Опыта получено: ${D.xp}.${rec.best?` Рекорд: ${rec.best}.`:''}</div>
+    <div class="kpi"><div class="card"><b class="num">${D.cleared}</b><span>этажей</span></div><div class="card"><b class="num">${D.answers}</b><span>ответов</span></div><div class="card"><b class="num" style="color:var(--bad)">${D.wrong.length}</b><span>слов с ошибкой</span></div></div></div>
+    ${wrongList(D.wrong)}
+    <div class="stack" style="margin-top:16px"><button class="btn block" id="dMap">Посмотреть карту</button><button class="btn soft block" id="dAgain">Новый данж с теми же этажами</button><button class="btn soft block" id="gList">К боссам</button></div>`;
+  $('#dMap').onclick=()=>goG('dunMap');$('#dAgain').onclick=()=>dunStart(D.floors);$('#gList').onclick=()=>goG('bossList');
+}
+
+/* ---------- Филворды ---------- */
+S.fwSel=new Set(['__all']);S.fwType='classic';S.fwSize='auto';
+const fwWordOf=(c)=>{const w=(splitVariants(c.front)[0]||'').trim();return /\s/.test(w)?'':w};
+const fwLen=(w)=>Array.from(w).length;
+function fwAvailW(){return Math.max(280,($('#view')?.clientWidth||innerWidth-32))}
+function fwAutoN(type){
+  const w=fwAvailW(),wide=w>=760,h=innerHeight;
+  const fit=Math.floor(Math.min(wide?w*0.58:w,(wide?h-170:h-330))/44);
+  return Math.max(5,Math.min(type==='classic'?8:10,fit));
+}
+const fwN=()=>S.fwSize==='auto'?fwAutoN(S.fwType):S.fwSize;
+function fwCards(){
+  let cards;
+  if(S.fwSel.has('__all')||!S.fwSel.size)cards=S.cards.filter(c=>!c.stop);
+  else{const ids=new Set();S.cats.filter(k=>S.fwSel.has(k.id)).forEach(k=>k.cardIds.forEach(i=>ids.add(i)));cards=S.cards.filter(c=>ids.has(c.id)&&!c.stop)}
+  const seen=new Set();
+  return cards.filter(c=>{const w=fwWordOf(c),L=fwLen(w);if(L<2||seen.has(w))return false;seen.add(w);return true});
+}
+function fwSetupView(el){
+  const groups=groupedCats().filter(g=>g.cats.length),multi=S.folders.length>0;
+  const row=(id,name,n)=>`<label class="check"><input type="checkbox" data-fs="${id}" ${S.fwSel.has(id)?'checked':''}><span class="grow">${esc(name)}</span><span class="pill neutral num">${n}</span></label>`;
+  const cnt=(k)=>k.cardIds.map(i=>byId(S.cards,i)).filter(c=>c&&!c.stop).length;
+  const rows=groups.map(g=>{const r=g.cats.map(k=>row(k.id,k.name,cnt(k))).join('');
+    return g.folder?`<div class="cap" style="margin:8px 2px 0">${esc(g.folder.name)}</div><div class="stack" style="margin-left:10px">${r}</div>`:(multi?'<div class="cap" style="margin:8px 2px 0">Без папки</div>':'')+r}).join('');
+  const sizes=[['auto',`Авто (${fwAutoN(S.fwType)}×${fwAutoN(S.fwType)})`],[6,'6×6'],[8,'8×8'],[10,'10×10']];
+  el.innerHTML=`<div class="row" style="margin-bottom:10px"><button class="chip" id="gBack">← Игры</button></div><h2>Филворд</h2>
+    <div class="row wrap"><button class="chip" data-ft="classic" aria-pressed="${S.fwType==='classic'}">Классический</button><button class="chip" data-ft="search" aria-pressed="${S.fwType==='search'}">Найди слова</button></div>
+    <div class="sub" style="margin-top:8px">${S.fwType==='classic'?'Слова изгибаются змейкой под прямым углом и заполняют всё поле, лишних букв нет. Ведите пальцем от первой буквы слова по соседним клеткам.':'Слова спрятаны по прямой: вправо, вниз или по диагонали, вокруг случайные буквы. Проведите пальцем от первой буквы до последней.'} В сетке японские слова, рядом их переводы.</div>
+    <div class="stack">${row('__all','Все карточки',S.cards.filter(c=>!c.stop).length)}${rows}</div>
+    <h2 style="margin-top:20px">Размер поля</h2>
+    <div class="row wrap">${sizes.map(([k,n])=>`<button class="chip" data-fz="${k}" aria-pressed="${S.fwSize==k}">${n}</button>`).join('')}</div>
+    <div id="gMsg" class="sub" style="margin:12px 0 0"></div>
+    <button class="btn block" id="gGo" style="margin-top:8px">Играть</button>`;
+  $('#gBack').onclick=()=>goG('hub');
+  el.querySelectorAll('[data-ft]').forEach(b=>b.onclick=()=>{S.fwType=b.dataset.ft;fwSetupView(el)});
+  el.querySelectorAll('[data-fs]').forEach(i=>i.onchange=()=>{const id=i.dataset.fs;
+    if(i.checked){if(id==='__all')S.fwSel.clear();else S.fwSel.delete('__all');S.fwSel.add(id)}else S.fwSel.delete(id);fwSetupView(el)});
+  el.querySelectorAll('[data-fz]').forEach(b=>b.onclick=()=>{S.fwSize=b.dataset.fz==='auto'?'auto':+b.dataset.fz;fwSetupView(el)});
+  $('#gGo').onclick=fwStart;
+}
+
+/* случайный гамильтонов путь по сетке (алгоритм «backbite»), режется на слова */
+function hamPath(N){
+  let p=[];for(let r=0;r<N;r++)for(let c=0;c<N;c++)p.push(r*N+(r%2?N-1-c:c));
+  const nb=(i)=>{const r=Math.floor(i/N),c=i%N,o=[];if(r>0)o.push(i-N);if(r<N-1)o.push(i+N);if(c>0)o.push(i-1);if(c<N-1)o.push(i+1);return o};
+  const idx=new Int32Array(N*N);
+  for(let it=0;it<N*N*40;it++){
+    if(Math.random()<.5)p.reverse();
+    p.forEach((v,i)=>idx[v]=i);
+    const L=p.length-1,e=p[L],cand=nb(e).filter(v=>v!==p[L-1]);
+    const n=cand[Math.floor(Math.random()*cand.length)],i=idx[n];
+    p=p.slice(0,i+1).concat(p.slice(i+1).reverse());
+  }
+  return p;
+}
+function fwPickFill(words,T){
+  /* слова, сумма длин которых ровно T; сначала давно не повторявшиеся */
+  const byLen=new Map();words.forEach(w=>{const L=w.len;if(!byLen.has(L))byLen.set(L,[]);byLen.get(L).push(w)});
+  for(let attempt=0;attempt<300;attempt++){
+    const pool=attempt<150?words.slice(0,Math.max(12,Math.ceil(words.length*.6))):words;
+    const order=shuffle(pool),used=new Set(),out=[];let rem=T;
+    for(const w of order){if(rem===0)break;if(used.has(w))continue;
+      if(w.len<=rem&&(rem-w.len===0||rem-w.len>=2)){out.push(w);used.add(w);rem-=w.len}}
+    if(rem===0)return out;
+    /* попытка закрыть остаток одним словом нужной длины */
+    const fit=(byLen.get(rem)||[]).find(w=>!used.has(w));if(fit){out.push(fit);return out}
+  }
+  return null;
+}
+function fwBuildClassic(cards,N){
+  const last=lastAnswers();
+  const words=cards.map(c=>({c,w:fwWordOf(c),len:fwLen(fwWordOf(c)),t:last.get(c.id)||0,r:Math.random()})).filter(x=>x.len<=Math.min(N+3,9))
+    .sort((a,b)=>a.t-b.t||a.r-b.r);
+  for(let n=N;n>=4;n--){
+    const pick=fwPickFill(words,n*n);if(!pick)continue;
+    const path=hamPath(n),grid=new Array(n*n),list=[];let k=0;
+    for(const x of pick){const cells=path.slice(k,k+x.len);k+=x.len;const ch=Array.from(x.w);cells.forEach((ci,j)=>grid[ci]=ch[j]);list.push({cid:x.c.id,w:x.w,clue:x.c.back,cells,found:false,hint:false})}
+    return {N:n,grid,words:list};
+  }
+  return null;
+}
+function fwBuildSearch(cards,N){
+  const last=lastAnswers();
+  const words=cards.map(c=>({c,w:fwWordOf(c),len:fwLen(fwWordOf(c)),t:last.get(c.id)||0,r:Math.random()})).filter(x=>x.len<=N)
+    .sort((a,b)=>a.t-b.t||a.r-b.r);
+  const target=Math.max(4,Math.min(14,Math.round(N*1.2)));
+  const cand=shuffle(words.slice(0,Math.max(target*2,12))).sort((a,b)=>b.len-a.len);
+  const grid=new Array(N*N).fill(null),list=[],dirs=[[0,1],[1,0],[1,1],[-1,1]];
+  for(const x of cand){if(list.length>=target)break;const ch=Array.from(x.w);let placed=false;
+    for(let t=0;t<120&&!placed;t++){
+      const [dr,dc]=dirs[Math.floor(Math.random()*(x.len>N-1?2:4))];
+      const r0=Math.floor(Math.random()*N),c0=Math.floor(Math.random()*N);
+      const cells=[];let ok=true;
+      for(let j=0;j<ch.length;j++){const r=r0+dr*j,c=c0+dc*j;if(r<0||r>=N||c<0||c>=N){ok=false;break}const i=r*N+c;if(grid[i]!==null&&grid[i]!==ch[j]){ok=false;break}cells.push(i)}
+      if(!ok)continue;
+      /* не накладываем слово целиком поверх другого */
+      if(list.some(o=>cells.every(ci=>o.cells.includes(ci))))continue;
+      cells.forEach((ci,j)=>grid[ci]=ch[j]);list.push({cid:x.c.id,w:x.w,clue:x.c.back,cells,found:false,hint:false});placed=true}
+  }
+  if(list.length<3)return null;
+  /* пустые клетки: знаки из ваших же слов */
+  const bag=[];cards.forEach(c=>Array.from(fwWordOf(c)).forEach(ch=>bag.push(ch)));
+  if(bag.length<40)S.cards.forEach(c=>Array.from(fwWordOf(c)).forEach(ch=>bag.push(ch)));
+  for(let i=0;i<grid.length;i++)if(grid[i]===null)grid[i]=bag[Math.floor(Math.random()*bag.length)]||'・';
+  return {N,grid,words:list};
+}
+function fwStart(){
+  const cards=fwCards(),N=fwN(),$m=()=>$('#gMsg')||{set textContent(t){toast(t)}};
+  if(cards.length<3){$m().textContent='Мало слов: нужно хотя бы 3 слова из 2+ знаков без пробелов в выбранных категориях.';return}
+  const b=S.fwType==='classic'?fwBuildClassic(cards,N):fwBuildSearch(cards,N);
+  if(!b){$m().textContent='Не получилось собрать поле из выбранных слов. Отметьте больше категорий или уменьшите поле.';return}
+  if(b.N<N)toast(`Слов хватило на поле ${b.N}×${b.N}`);
+  S.game.run={kind:'fw',type:S.fwType,...b,sel:[],hints:0,acc:0,t0:Date.now(),running:true,done:false,colors:0,mist:0};
+  S.game.view='fw';viewGames();
+}
+const FW_COL=(k)=>`hsl(${(k*67+200)%360} 75% 78%)`;
+function fwRunView(el){
+  const r=S.game.run;clearInterval(gTimer);
+  const w=fwAvailW(),wide=w>=760,cell=Math.max(28,Math.min(60,Math.floor((wide?Math.min(w*0.58,innerHeight-170):Math.min(w,innerHeight-300))/r.N)));
+  const owner=new Map();r.words.forEach((x,k)=>{if(x.found)x.cells.forEach(ci=>owner.set(ci,k))});
+  const left=r.words.filter(x=>!x.found).length;
+  el.innerHTML=`<div class="row wrap" style="margin-bottom:10px;gap:6px"><button class="chip" id="gQuit">✕ Выйти</button><div class="grow"></div>
+      <span class="hud num" id="hTime">0:00</span><span class="hud num">${r.words.length-left} / ${r.words.length}</span></div>
+    <div class="fw${wide?' wide':''}"><div><div class="fw-grid" id="fwg" style="grid-template-columns:repeat(${r.N},${cell}px);font-size:${Math.round(cell*.52)}px">${r.grid.map((ch,i)=>`<div class="fc" data-i="${i}" style="width:${cell}px;height:${cell}px${owner.has(i)?`;background:${FW_COL(owner.get(i))}`:''}">${esc(ch)}</div>`).join('')}</div>
+      <div class="sub" id="fwMsg" style="text-align:center;min-height:20px;margin:6px 0 0"></div></div>
+    <div><div class="cap">Найдите слова (${left} осталось)</div><div class="fw-clues">${r.words.map((x,k)=>`<div class="fwc${x.found?' f':''}">${x.found?`<span class="dot" style="background:${FW_COL(k)}"></span><b>${esc(x.w)}</b> · `:''}${esc(x.clue)}${x.hint&&!x.found?' <span style="color:var(--stop)">(подсказка)</span>':''}</div>`).join('')}</div>
+      <div class="row" style="margin-top:12px"><button class="btn soft grow" id="fwHint">Подсказка</button><button class="btn soft grow" id="fwGive">Сдаться</button></div></div></div>`;
+  $('#hTime').textContent=fmtTime(fwElapsed());
+  gTimer=setInterval(()=>{if(S.tab==='games'&&S.game.view==='fw'&&!r.done&&$('#hTime'))$('#hTime').textContent=fmtTime(fwElapsed())},400);
+  $('#gQuit').onclick=()=>{S.game.run=null;goG('fwSetup')};
+  $('#fwHint').onclick=()=>fwHint();
+  const gv=$('#fwGive');gv.onclick=()=>{gv.textContent='Точно?';gv.onclick=()=>fwFinish(true)};
+  fwBindDrag($('#fwg'));
+}
+const fwElapsed=()=>{const r=S.game.run;return r.acc+(r.running?Date.now()-r.t0:0)};
+function fwPaintSel(){const r=S.game.run;document.querySelectorAll('#fwg .fc.sel').forEach(x=>x.classList.remove('sel'));r.sel.forEach(i=>{const c=$(`#fwg .fc[data-i="${i}"]`);if(c)c.classList.add('sel')})}
+function fwBindDrag(g){
+  const r=S.game.run,N=r.N;let down=false,start=-1;
+  const cellAt=(e)=>{const el=document.elementFromPoint(e.clientX,e.clientY);const c=el&&el.closest&&el.closest('#fwg .fc');return c?+c.dataset.i:-1};
+  const adj=(a,b)=>{const ra=Math.floor(a/N),ca=a%N,rb=Math.floor(b/N),cb=b%N;return Math.abs(ra-rb)+Math.abs(ca-cb)===1};
+  g.addEventListener('pointerdown',e=>{const i=cellAt(e);if(i<0)return;e.preventDefault();down=true;start=i;r.sel=[i];g.setPointerCapture(e.pointerId);fwPaintSel();sfx('pick')});
+  g.addEventListener('pointermove',e=>{if(!down)return;const i=cellAt(e);if(i<0)return;
+    if(r.type==='classic'){const L=r.sel.length;if(i===r.sel[L-1])return;
+      if(L>1&&i===r.sel[L-2])r.sel.pop();else if(!r.sel.includes(i)&&adj(r.sel[L-1],i))r.sel.push(i);else return}
+    else{const r0=Math.floor(start/N),c0=start%N,r1=Math.floor(i/N),c1=i%N,dr=r1-r0,dc=c1-c0;
+      if(!(dr===0||dc===0||Math.abs(dr)===Math.abs(dc)))return;
+      const n=Math.max(Math.abs(dr),Math.abs(dc)),sr=Math.sign(dr),sc=Math.sign(dc);r.sel=[];for(let k=0;k<=n;k++)r.sel.push((r0+sr*k)*N+c0+sc*k)}
+    fwPaintSel()});
+  const up=()=>{if(!down)return;down=false;fwCheck()};
+  g.addEventListener('pointerup',up);g.addEventListener('pointercancel',()=>{down=false;r.sel=[];fwPaintSel()});
+}
+function fwCheck(){
+  const r=S.game.run,sel=r.sel.slice();r.sel=[];fwPaintSel();if(sel.length<2)return;
+  const same=(a,b)=>a.length===b.length&&a.every((v,i)=>v===b[i]);
+  const hit=r.words.find(x=>!x.found&&(same(x.cells,sel)||same(x.cells,sel.slice().reverse())));
+  const msg=$('#fwMsg');
+  if(hit){hit.found=true;logEvent(hit.cid,hit.hint?'bad':'ok');addXp(hit.hint?1:3);sfx('ok');buzz(25);
+    if(r.words.every(x=>x.found))return fwFinish(false);fwRunView($('#view'));const m=$('#fwMsg');if(m)m.textContent=`✓ ${hit.w} · ${hit.clue}`;return}
+  const text=sel.map(i=>r.grid[i]).join(''),rev=sel.slice().reverse().map(i=>r.grid[i]).join('');
+  const near=r.words.find(x=>!x.found&&(x.w===text||x.w===rev));
+  if(near){if(msg)msg.textContent='Такое слово есть, но оно спрятано в другом месте';return}
+  r.mist++;sfx('bad');buzz(30);if(msg)msg.textContent='Такого слова нет в списке';
+  sel.forEach(i=>{const c=$(`#fwg .fc[data-i="${i}"]`);if(c){c.classList.add('bad');setTimeout(()=>c.classList.remove('bad'),420)}});
+}
+function fwHint(){
+  const r=S.game.run,left=r.words.filter(x=>!x.found);if(!left.length)return;
+  const x=left.find(w=>!w.hint)||left[0];x.hint=true;r.hints++;
+  fwRunView($('#view'));const c=$(`#fwg .fc[data-i="${x.cells[0]}"]`);if(c)c.classList.add('hint');
+  const m=$('#fwMsg');if(m)m.textContent=`Первая буква слова «${x.clue}» подсвечена`;
+}
+function fwFinish(gaveUp){
+  const r=S.game.run;if(r.done)return;r.acc=fwElapsed();r.running=false;r.done=true;r.gaveUp=gaveUp;clearInterval(gTimer);
+  if(gaveUp)r.words.filter(x=>!x.found).forEach(x=>logEvent(x.cid,'bad'));
+  if(!gaveUp){const key=r.type+r.N,B=(S.meta.fwBest=S.meta.fwBest||{});r.record=!B[key]||r.acc<B[key];if(r.record)B[key]=r.acc;addXp(10);sfx('win');buzz([40,30,90])}
+  saveMeta();goG('fwDone');
+}
+function fwDoneView(el){
+  const r=S.game.run,found=r.words.filter(x=>x.found).length;
+  el.innerHTML=`<h2>${r.gaveUp?'Филворд окончен':'Все слова найдены!'}</h2><div class="card" style="text-align:center">
+    <div class="sub" style="margin:0 0 10px">${r.type==='classic'?'Классический':'Найди слова'}, поле ${r.N}×${r.N}.${r.record?' Новый рекорд времени!':''}</div>
+    <div class="kpi"><div class="card"><b class="num">${fmtTime(r.acc)}</b><span>время</span></div><div class="card"><b class="num">${found} / ${r.words.length}</b><span>слов</span></div><div class="card"><b class="num">${r.hints}</b><span>подсказок</span></div></div></div>
+    <h2 style="margin-top:18px">Слова</h2><div class="stack">${r.words.map(x=>`<div class="item"><div class="w"><b>${esc(x.w)}</b><span>${esc(x.clue)}</span></div>${x.found&&!x.hint?'<span class="mark ok">✓</span>':'<span class="mark bad">✗</span>'}</div>`).join('')}</div>
+    <div class="stack" style="margin-top:16px"><button class="btn block" id="gAgain">Ещё филворд</button><button class="btn soft block" id="gHub">К играм</button></div>`;
+  $('#gAgain').onclick=fwStart;$('#gHub').onclick=()=>goG('hub');
+}
+function fwIcon(){return `<svg viewBox="0 0 64 64" width="56" height="56">${[0,1,2].map(r=>[0,1,2].map(c=>`<rect x="${6+c*18}" y="${6+r*18}" width="16" height="16" rx="4" fill="${(r===0)||(c===2&&r>0)?'var(--accent)':'var(--surface2)'}" opacity=".9"/>`).join('')).join('')}</svg>`}
 /* ---------- Серия занятий ---------- */
 function streakInfo(){
   const days=new Set(S.events.map(e=>dayKey(e.t)));
@@ -1551,7 +1951,7 @@ function renderTabs(){
   });
 }
 function render(){
-  $('#title').textContent=TITLES[S.tab];renderTabs();
+  $('#title').textContent=TITLES[S.tab];renderTabs();document.body.classList.toggle('wide',S.tab==='games');
   if(S.tab==='cards')viewCards();
   else if(S.tab==='cats')viewCats();
   else if(S.tab==='study'){if(!S.study)S.study={phase:'setup'};viewStudy()}
@@ -1566,6 +1966,7 @@ async function init(){
   await openDB();
   try{
     S.cards=await dbAll('cards');S.cats=await dbAll('cats');S.events=await dbAll('events');
+    {const ch=migrateCats(S.cats);if(ch.length)await dbPutMany('cats',ch)}
     const metaAll=await dbAll('meta');
     const m=metaAll.find(x=>x.k==='meta');if(m){const{k,...rest}=m;S.meta={...S.meta,...rest}}
     const dr=metaAll.find(x=>x.k==='drafts');if(dr){const{k,...rest}=dr;S.drafts=rest}
